@@ -1,0 +1,23 @@
+# Core IR engine
+nltk>=3.9
+ir_datasets>=0.5
+ijson>=3.2            # streaming JSON reader for the multi-GB corpora
+numpy>=1.26
+scipy>=1.11
+scikit-learn>=1.3
+rank-bm25>=0.2        # reference BM25 (our BM25 is custom; kept for comparison)
+
+# Embeddings
+torch>=2.2            # used to train the Word2Vec skip-gram (no gensim needed)
+sentence-transformers>=2.2
+transformers>=4.40
+
+# Services (SOA) + UI
+fastapi>=0.110
+uvicorn>=0.27
+pydantic>=2.5
+streamlit>=1.30
+pandas>=2.0
+
+# NOTE: gensim is intentionally NOT used — it has no wheel for Python 3.14 and
+# needs a C compiler. Word2Vec is implemented directly in PyTorch instead.

@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IR System — Code Reference</title>
+<style>
+:root { --navy:#14315e; --blue:#1d4e89; --green:#0b3d2e; --line:#c7d4e6; --bg:#fafbfc; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: #1a1a1a;
+       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+       font-size: 16px; line-height: 1.6; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; display: flex; gap: 32px; align-items: flex-start; }
+nav.toc { position: sticky; top: 0; max-height: 100vh; overflow-y: auto; flex: 0 0 290px;
+          padding: 24px 12px 24px 0; font-size: 13.5px; border-right: 1px solid var(--line); }
+nav.toc .toctitle { font-weight: 700; color: var(--navy); font-size: 14px; text-transform: uppercase;
+                    letter-spacing: .04em; margin-bottom: 8px; }
+nav.toc ul { list-style: none; margin: 0; padding-left: 12px; }
+nav.toc > ul { padding-left: 0; }
+nav.toc li { margin: 2px 0; }
+nav.toc a { color: #3a4a5e; text-decoration: none; display: block; padding: 2px 6px; border-radius: 5px; }
+nav.toc a:hover { background: #eef2f8; color: var(--blue); }
+main { flex: 1 1 auto; min-width: 0; padding: 28px 0 80px; }
+h1 { font-size: 28px; color: var(--navy); margin: 34px 0 12px; padding-bottom: 6px; border-bottom: 3px solid var(--navy); scroll-margin-top: 16px; }
+h2 { font-size: 21px; color: var(--blue); margin: 28px 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--line); scroll-margin-top: 16px; }
+h3 { font-size: 16.5px; color: var(--green); margin: 20px 0 4px; scroll-margin-top: 16px; }
+h4 { font-size: 15px; color: #444; margin: 14px 0 4px; scroll-margin-top: 16px; }
+p { margin: 8px 0; }
+code { font-family: "SF Mono", "Cascadia Code", Consolas, monospace; font-size: 13.5px;
+       background: #eef1f5; color: #9a2b2b; padding: 1px 5px; border-radius: 4px; word-break: break-word; }
+h2 code, h3 code, h4 code { background: transparent; color: inherit; font-size: .94em; padding: 0; }
+pre { background: #0f1b2d; border-radius: 8px; padding: 14px 16px; overflow-x: auto; margin: 12px 0; }
+pre code { background: transparent; color: #d6e2f0; font-size: 13px; line-height: 1.5; word-break: normal; white-space: pre; }
+table { border-collapse: collapse; margin: 12px 0; width: 100%; font-size: 14.5px; }
+th { background: var(--navy); color: #fff; padding: 8px 11px; text-align: left; }
+td { border: 1px solid var(--line); padding: 8px 11px; vertical-align: top; }
+tr:nth-child(even) td { background: #f3f7fc; }
+hr { border: none; border-top: 1px solid #d8dee6; margin: 22px 0; }
+strong { color: var(--navy); }
+a { color: var(--blue); }
+@media (max-width: 820px) { .wrap { flex-direction: column; } nav.toc { position: static; max-height: none; flex-basis: auto; border-right: none; border-bottom: 1px solid var(--line); width: 100%; } }
+</style>
+</head><body>
+<div class="wrap">
+<nav class="toc"><div class="toctitle">Contents</div><div class="toc">
+<ul>
+<li><a href="#information-retrieval-system-complete-code-reference">Information Retrieval System — Complete Code Reference</a></li>
+<li><a href="#part-i-system-overview">Part I — System Overview</a></li>
+<li><a href="#part-ii-requirements-coverage">Part II — Requirements Coverage</a></li>
+<li><a href="#part-iii-architecture">Part III — Architecture</a></li>
+<li><a href="#part-iv-how-a-search-works-end-to-end">Part IV — How a Search Works (end-to-end)</a></li>
+<li><a href="#part-v-storage-compression-design">Part V — Storage &amp; Compression Design</a></li>
+<li><a href="#part-vi-directory-layout">Part VI — Directory Layout</a></li>
+<li><a href="#part-vii-code-reference-every-file-function">Part VII — Code Reference: Every File &amp; Function</a><ul>
+<li><a href="#section-a-configuration-shared-types">Section A — Configuration &amp; Shared Types</a></li>
+<li><a href="#ir_core__init__py">ir_core/__init__.py</a></li>
+<li><a href="#ir_coreconfigpy">ir_core/config.py</a></li>
+<li><a href="#ir_coretypespy">ir_core/types.py</a></li>
+<li><a href="#section-b-data-text-layer">Section B — Data &amp; Text Layer</a></li>
+<li><a href="#ir_coredatacorpuspy">ir_core/data/corpus.py</a></li>
+<li><a href="#ir_coretextpreprocessingpy">ir_core/text/preprocessing.py</a></li>
+<li><a href="#ir_corequeryprocessingpy">ir_core/query/processing.py</a></li>
+<li><a href="#ir_corequeryrefinementpy">ir_core/query/refinement.py</a></li>
+<li><a href="#section-c-indexing-layer">Section C — Indexing Layer</a></li>
+<li><a href="#ir_coreindexinverted_indexpy">ir_core/index/inverted_index.py</a></li>
+<li><a href="#ir_coreindexvector_storepy">ir_core/index/vector_store.py</a></li>
+<li><a href="#section-d-representation-layer">Section D — Representation Layer</a></li>
+<li><a href="#ir_corerepresentation__init__py">ir_core/representation/__init__.py</a></li>
+<li><a href="#ir_corerepresentationbasepy">ir_core/representation/base.py</a></li>
+<li><a href="#ir_corerepresentationtfidfpy">ir_core/representation/tfidf.py</a></li>
+<li><a href="#ir_corerepresentationbm25py">ir_core/representation/bm25.py</a></li>
+<li><a href="#ir_corerepresentationembeddingspy">ir_core/representation/embeddings.py</a></li>
+<li><a href="#ir_corerepresentationword2vecpy">ir_core/representation/word2vec.py</a></li>
+<li><a href="#ir_corerepresentationhybridpy">ir_core/representation/hybrid.py</a></li>
+<li><a href="#ir_coreenginepy">ir_core/engine.py</a></li>
+<li><a href="#section-e-evaluation-layer">Section E — Evaluation Layer</a></li>
+<li><a href="#ir_coreevalmetricspy">ir_core/eval/metrics.py</a></li>
+<li><a href="#ir_coreevalevaluatepy">ir_core/eval/evaluate.py</a></li>
+<li><a href="#section-f-command-line-scripts">Section F — Command-Line Scripts</a></li>
+<li><a href="#scriptsbuild_indexespy">scripts/build_indexes.py</a></li>
+<li><a href="#scriptsevaluatepy">scripts/evaluate.py</a></li>
+<li><a href="#scriptsrun_full_evalpy">scripts/run_full_eval.py</a></li>
+<li><a href="#scriptssmoke_testpy">scripts/smoke_test.py</a></li>
+<li><a href="#section-g-service-oriented-architecture-soa">Section G — Service-Oriented Architecture (SOA)</a></li>
+<li><a href="#servicescommonpy">services/common.py</a></li>
+<li><a href="#servicesgatewaypy">services/gateway.py</a></li>
+<li><a href="#servicespreprocessing_servicepy">services/preprocessing_service.py</a></li>
+<li><a href="#servicesindexing_servicepy">services/indexing_service.py</a></li>
+<li><a href="#servicesretrieval_servicepy">services/retrieval_service.py</a></li>
+<li><a href="#servicesranking_eval_servicepy">services/ranking_eval_service.py</a></li>
+<li><a href="#servicesquery_refinement_servicepy">services/query_refinement_service.py</a></li>
+<li><a href="#servicesrun_allpy">services/run_all.py</a></li>
+<li><a href="#section-h-root-utility-scripts">Section H — Root Utility Scripts</a></li>
+<li><a href="#preprocessingpy">preprocessing.py</a></li>
+<li><a href="#process_docspy">process_docs.py</a></li>
+<li><a href="#check_readypy">check_ready.py</a></li>
+<li><a href="#download_datasetpy">download_dataset.py</a></li>
+<li><a href="#ir_win_fixpy">ir_win_fix.py</a></li>
+<li><a href="#section-i-user-interface">Section I — User Interface</a></li>
+<li><a href="#uiapppy">ui/app.py</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</nav>
+<main><h1 id="information-retrieval-system-complete-code-reference">Information Retrieval System — Complete Code Reference</h1>
+<p><strong>Project:</strong> Service-Oriented IR System over the Args.me corpus (Touché 2020 Task 1)
+<strong>Scope:</strong> Every source file, and every function/class/method within it.
+<strong>Generated:</strong> 2026-06-25</p>
+<hr />
+<h1 id="part-i-system-overview">Part I — System Overview</h1>
+<p>This project is a complete, modular <strong>Information Retrieval (IR)</strong> system built around a single
+shared engine library (<code>ir_core</code>) that is exposed three ways: a <strong>Streamlit web UI</strong>, a
+<strong>Service-Oriented Architecture (SOA)</strong> of five FastAPI microservices behind an API gateway, and a
+set of <strong>command-line scripts</strong> for building indexes and running evaluations.</p>
+<p>It retrieves over the <strong>Args.me</strong> debate-argument corpus (387,692 documents, Touché 2020 Task 1),
+with evaluation queries and relevance judgments (qrels) pulled from the <code>ir_datasets</code> library. A
+tiny 5-document sample corpus ships for smoke tests.</p>
+<p>The system implements <strong>six retrieval models</strong> behind one uniform interface:</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Representation</th>
+<th>Matching</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>TF-IDF (VSM)</strong></td>
+<td>sparse <code>ltc</code> term weights</td>
+<td>cosine similarity</td>
+</tr>
+<tr>
+<td><strong>BM25</strong></td>
+<td>probabilistic Okapi, tunable <code>k1</code>/<code>b</code></td>
+<td>BM25 score</td>
+</tr>
+<tr>
+<td><strong>BERT</strong></td>
+<td><code>all-MiniLM-L6-v2</code> sentence embeddings</td>
+<td>cosine</td>
+</tr>
+<tr>
+<td><strong>Word2Vec</strong></td>
+<td>PyTorch skip-gram, mean-pooled word vectors</td>
+<td>cosine</td>
+</tr>
+<tr>
+<td><strong>Hybrid · Parallel</strong></td>
+<td>fuses several models</td>
+<td>weighted-sum or RRF</td>
+</tr>
+<tr>
+<td><strong>Hybrid · Serial</strong></td>
+<td>one model retrieves, another re-ranks</td>
+<td>stage-2 score</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="part-ii-requirements-coverage">Part II — Requirements Coverage</h1>
+<p>The codebase is organized around the project brief's nine graded requirements:</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Requirement</th>
+<th>Where it lives</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2</td>
+<td><strong>Representations:</strong> VSM TF-IDF, BM25, embeddings (BERT <strong>and</strong> Word2Vec), hybrid (serial <strong>and</strong> parallel with fusion)</td>
+<td><code>ir_core/representation/</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Indexing:</strong> disk-backed inverted index (SQLite), streamed build</td>
+<td><code>ir_core/index/inverted_index.py</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Query processing:</strong> identical preprocessing for documents and queries</td>
+<td><code>ir_core/text/preprocessing.py</code>, <code>ir_core/query/processing.py</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Query refinement:</strong> spell-correction, WordNet expansion, suggestion, history</td>
+<td><code>ir_core/query/refinement.py</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Matching &amp; ranking:</strong> cosine / BM25 / dot product per model</td>
+<td><code>ir_core/representation/*</code>, <code>ir_core/engine.py</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>SOA:</strong> five microservices + API gateway (FastAPI/REST)</td>
+<td><code>services/</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>Evaluation:</strong> MAP, Recall, P@10, nDCG@10, before/after refinement</td>
+<td><code>ir_core/eval/</code></td>
+</tr>
+<tr>
+<td>9</td>
+<td><strong>UI:</strong> Streamlit web application</td>
+<td><code>ui/app.py</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="part-iii-architecture">Part III — Architecture</h1>
+<p>The system is layered so that retrieval logic lives in one place and every front-end reuses it.</p>
+<pre><code>        ┌───────────────┐     ┌──────────────────────────────┐
+        │  Streamlit UI │     │   CLI scripts (build / eval)  │
+        └──────┬────────┘     └───────────────┬──────────────┘
+               │                              │
+        ┌──────▼──────────────────────────────▼──────┐
+        │   API Gateway (8000)  ──►  5 microservices  │   (SOA path)
+        │   preprocessing/indexing/retrieval/         │
+        │   ranking-eval/refinement (8001-8005)       │
+        └──────────────────────┬──────────────────────┘
+                               ▼
+        ┌─────────────────────────────────────────────┐
+        │        ir_core  (shared engine library)      │
+        │  text · data · index · representation ·      │
+        │  query · eval · engine.Engine (Facade)       │
+        └──────────────────────┬──────────────────────┘
+                               ▼
+        ┌─────────────────────────────────────────────┐
+        │   Data layer (per dataset, indexes/&lt;key&gt;/)   │
+        │  inverted_index.sqlite (full docs as zlib    │
+        │  BLOBs) · emb_*.vectors.f32.gz ·             │
+        │  *.docids.json.gz · word2vec.vectors.npz ·   │
+        │  word2vec.vocab.json.gz                      │
+        └─────────────────────────────────────────────┘
+</code></pre>
+<p><strong>Design patterns used.</strong> The <code>Engine</code> is a <strong>Facade</strong> over all the representations and the
+refiner. Every retriever (lexical or dense) implements the same <strong>Strategy</strong>-style interface
+(<code>search</code>/<code>rescore</code>) so the hybrids and the engine treat them uniformly. The API <strong>Gateway</strong> is a
+Gateway/Facade that holds no business logic — it forwards each call to the owning service and
+composes them when needed (e.g. <code>/search_refined</code> calls Refinement then Retrieval). A
+process-wide <code>ENGINE</code> <strong>singleton</strong> keeps loaded indexes warm across requests.</p>
+<p><strong>Both backends, one UI.</strong> The Streamlit app can call the engine <strong>in-process</strong> (no servers) or
+route through the <strong>gateway (SOA)</strong>; a sidebar toggle switches between them, and both expose the
+identical operations.</p>
+<hr />
+<h1 id="part-iv-how-a-search-works-end-to-end">Part IV — How a Search Works (end-to-end)</h1>
+<ol>
+<li>The UI (or a gateway client) calls <code>Engine.search(dataset, model, query, …)</code>.</li>
+<li>The engine lazily loads the dataset <strong>bundle</strong>: the SQLite inverted index, whichever dense
+   vector stores exist, and a query refiner. Bundles are cached so this happens once.</li>
+<li>If refinement is enabled, the <strong><code>QueryRefiner</code></strong> spell-corrects and/or expands the query —
+   keeping only corrections/synonyms that actually occur in the corpus (<code>df &gt; 0</code>).</li>
+<li><strong><code>build_context</code></strong> normalizes the (effective) query with the <em>same</em> preprocessing pipeline
+   used to build the index, producing a <code>QueryContext</code> of raw text + tokens.</li>
+<li>The engine dispatches to the requested model:
+   - <strong>TF-IDF / BM25</strong> score by streaming the matching terms' postings from SQLite.
+   - <strong>BERT / Word2Vec</strong> encode the query and run a cosine search over the in-memory (inflated)
+     vector matrix.
+   - <strong>Hybrids</strong> either fuse several models' rankings (parallel) or retrieve-then-rerank (serial).</li>
+<li>Result <code>doc_id</code>s are joined back to their <strong>full original text</strong> (decompressed from the
+   SQLite BLOB) and returned as ranked <code>SearchResult</code>s.</li>
+</ol>
+<hr />
+<h1 id="part-v-storage-compression-design">Part V — Storage &amp; Compression Design</h1>
+<p>Two storage requirements shape the data layer, and both are satisfied:</p>
+<ul>
+<li><strong>Original documents live in the database, in full.</strong> The SQLite <code>docs</code> table stores each
+  document's complete original text as a <strong>zlib-compressed BLOB</strong> (no truncation). Top-k results
+  are served straight from the DB, and the UI shows the entire document inline.</li>
+<li><strong>Models and indexes are stored compressed.</strong> Dense vectors are gzip-streamed
+  (<code>*.vectors.f32.gz</code>), doc-id sidecars are gzipped (<code>*.docids.json.gz</code>), the Word2Vec matrix is a
+  compressed <code>.npz</code>, and its vocab is gzipped JSON. The inverted index's bulky text payload is
+  zlib-compressed inside the DB.</li>
+<li><strong>Nothing is trained at query time.</strong> TF-IDF and BM25 score from a <strong>pre-built</strong> index (IDF and
+  per-document norms are computed once at build time); the dense vectors and Word2Vec model are
+  built offline and only <em>loaded</em> at query time. The first dense query inflates the compressed
+  vector file into memory once, then scoring is fast.</li>
+</ul>
+<hr />
+<h1 id="part-vi-directory-layout">Part VI — Directory Layout</h1>
+<pre><code>ir_core/            # the IR engine (importable library)
+  text/             #   preprocessing (documents + queries)
+  data/             #   streaming corpus + qrels/queries
+  index/            #   inverted index (SQLite) + dense vector store
+  representation/   #   tfidf, bm25, word2vec, embeddings, hybrid
+  query/            #   processing + refinement
+  eval/             #   metrics + runner
+  engine.py         #   orchestrator (Facade) used by services &amp; UI
+services/           # SOA: preprocessing/indexing/retrieval/ranking-eval/refinement + gateway
+ui/app.py           # Streamlit UI
+scripts/            # build_indexes.py, evaluate.py, run_full_eval.py, smoke_test.py
+docs/               # ARCHITECTURE.md, REPORT.md, CODE_REFERENCE.md
+(root)              # preprocessing.py, process_docs.py, check_ready.py,
+                    # download_dataset.py, ir_win_fix.py
+</code></pre>
+<hr />
+<h1 id="part-vii-code-reference-every-file-function">Part VII — Code Reference: Every File &amp; Function</h1>
+<p>This part documents every source file and every function, class, method, and HTTP route it
+contains, grouped by layer.</p>
+<hr />
+<h2 id="section-a-configuration-shared-types">Section A — Configuration &amp; Shared Types</h2>
+<h2 id="ir_core__init__py"><code>ir_core/__init__.py</code></h2>
+<p><strong>Purpose:</strong> Package marker for the <code>ir_core</code> IR engine library; declares the package docstring and version.</p>
+<p>This file contains no functions or classes. It only sets the module docstring (describing the library as a modular IR engine with multiple document representations, disk-backed indexing, query processing/refinement, ranking and evaluation) and defines a single module-level constant <code>__version__ = "1.0.0"</code>.</p>
+<h2 id="ir_coreconfigpy"><code>ir_core/config.py</code></h2>
+<p><strong>Purpose:</strong> Central configuration hub: the dataset registry, on-disk index paths, microservice endpoint URLs, and default model/retrieval hyper-parameters, so no path or dataset id is hard-coded elsewhere.</p>
+<p>Module-level constants: <code>PROJECT_ROOT</code> (the repo root, computed from this file's location), <code>INDEX_ROOT</code> (root directory for all persisted indexes, overridable via the <code>IR_INDEX_ROOT</code> env var), <code>DATASETS</code> (a dict mapping dataset keys to <code>DatasetSpec</code> objects, currently just <code>"argsme"</code>), <code>SAMPLE</code> (a tiny 5-doc <code>DatasetSpec</code> for smoke tests), <code>BERT_MODEL_NAME</code> (sentence-transformers model name, overridable via <code>IR_BERT_MODEL</code>), <code>DEFAULT_TOP_K = 10</code>, and <code>SERVICE_URLS</code> (a dict of microservice host:port URLs, each overridable via env var).</p>
+<h3 id="class-datasetspec">class <code>DatasetSpec</code></h3>
+<p>A frozen dataclass describing one corpus: where its preprocessed docs live and how to fetch its evaluation queries/qrels from <code>ir_datasets</code>. Fields: <code>key: str</code> (short id used in URLs/CLI/UI), <code>name: str</code> (human-friendly name), <code>processed_json: str</code> (path to the preprocessed docs JSON array), <code>ir_datasets_id: str</code> (id understood by <code>ir_datasets</code> for queries + qrels), and <code>query_text_attrs: tuple</code> (attribute names to try in order when extracting query text, default <code>("text", "title", "description", "query")</code>).</p>
+<h4 id="index_dirself-str"><code>index_dir(self) -&gt; str</code></h4>
+<p>A read-only property returning this dataset's index directory, computed as <code>os.path.join(INDEX_ROOT, self.key)</code>. It does not create the directory; it only composes the path.</p>
+<h3 id="class-bm25params">class <code>BM25Params</code></h3>
+<p>A dataclass holding default BM25 ranking hyper-parameters: <code>k1: float = 1.5</code> (term-frequency saturation) and <code>b: float = 0.75</code> (length normalization).</p>
+<h3 id="class-word2vecparams">class <code>Word2VecParams</code></h3>
+<p>A dataclass of default skip-gram Word2Vec hyper-parameters: <code>dim: int = 100</code>, <code>window: int = 5</code>, <code>min_count: int = 2</code>, <code>negatives: int = 5</code>, <code>epochs: int = 3</code>, <code>batch_size: int = 1024</code>, <code>lr: float = 0.025</code>, <code>max_vocab: int = 50000</code>.</p>
+<h3 id="def-get_datasetkey-str-datasetspec"><code>def get_dataset(key: str) -&gt; DatasetSpec</code></h3>
+<p>Resolves a dataset key to its <code>DatasetSpec</code>. Returns <code>SAMPLE</code> if <code>key</code> matches the sample key; otherwise looks the key up in <code>DATASETS</code>. Raises <code>KeyError</code> (listing the known keys) for an unknown key.</p>
+<h3 id="def-list_datasets-listdict"><code>def list_datasets() -&gt; list[dict]</code></h3>
+<p>Returns a summary dict per registered dataset (the <code>DATASETS</code> values plus <code>SAMPLE</code>), each with <code>key</code>, <code>name</code>, and <code>available</code> (whether the <code>processed_json</code> file exists on disk).</p>
+<h3 id="def-ensure_index_dirdataset_key-str-str"><code>def ensure_index_dir(dataset_key: str) -&gt; str</code></h3>
+<p>Resolves the dataset's index directory, creates it (<code>os.makedirs(..., exist_ok=True)</code>), and returns the path. Guarantees the directory exists before artifacts are written.</p>
+<h2 id="ir_coretypespy"><code>ir_core/types.py</code></h2>
+<p><strong>Purpose:</strong> Defines small shared data types used across the retrieval layer.</p>
+<h3 id="class-searchresult">class <code>SearchResult</code></h3>
+<p>A dataclass representing a single ranked search hit. Fields: <code>doc_id: str</code>, <code>score: float</code>, <code>rank: int = 0</code>, <code>raw_text: str = ""</code>, and <code>components: dict</code> (default empty, populated by hybrid fusion with per-model component scores for transparency).</p>
+<h4 id="to_dictself-dict"><code>to_dict(self) -&gt; dict</code></h4>
+<p>Serializes the result to a JSON-friendly dict. Rounds <code>score</code> to 6 decimals, passes through <code>doc_id</code>/<code>rank</code>/<code>raw_text</code>, and rounds every <code>components</code> value to 6 decimals. Rounding keeps API payloads compact and deterministic.</p>
+<hr />
+<h2 id="section-b-data-text-layer">Section B — Data &amp; Text Layer</h2>
+<h2 id="ir_coredatacorpuspy"><code>ir_core/data/corpus.py</code></h2>
+<p><strong>Purpose:</strong> Streaming access to the potentially multi-GB preprocessed corpora and to evaluation queries/qrels from <code>ir_datasets</code>; processed JSON arrays are streamed with <code>ijson</code> rather than fully loaded.</p>
+<h3 id="class-doc">class <code>Doc</code></h3>
+<p>A dataclass representing one preprocessed document. Fields: <code>doc_id: str</code>, <code>tokens: list[str]</code>, <code>raw_text: str</code>.</p>
+<h3 id="def-iter_docsspec-datasetspec-limit-optionalint-none-iteratordoc"><code>def iter_docs(spec: DatasetSpec, limit: Optional[int] = None) -&gt; Iterator[Doc]</code></h3>
+<p>Streams documents one at a time from <code>spec.processed_json</code> in file order. Opens the file in binary mode and uses <code>ijson.items(f, "item")</code> to iterate array records lazily, yielding a <code>Doc</code> per record. Fields are read defensively (<code>rec.get(...)</code>), <code>doc_id</code> falling back to the running index, tokens/raw_text to empty. Stops once <code>n</code> reaches a truthy <code>limit</code> (<code>None</code>/<code>0</code> = all docs).</p>
+<h3 id="def-count_docsspec-datasetspec-limit-optionalint-none-int"><code>def count_docs(spec: DatasetSpec, limit: Optional[int] = None) -&gt; int</code></h3>
+<p>Counts documents by iterating <code>iter_docs(...)</code>, never loading the whole file; <code>limit</code> caps the count.</p>
+<h3 id="def-_query_textquery_obj-attrs-tuple-str"><code>def _query_text(query_obj, attrs: tuple) -&gt; str</code></h3>
+<p>Private helper extracting a usable query string from an <code>ir_datasets</code> query object (whose shape varies by corpus). Tries each attribute name in <code>attrs</code> in order, returning the first truthy one; falls back to <code>default_text()</code> if present; else <code>""</code>.</p>
+<h3 id="def-load_queriesspec-datasetspec-limit-optionalint-none-listtuplestr-str"><code>def load_queries(spec: DatasetSpec, limit: Optional[int] = None) -&gt; list[tuple[str, str]]</code></h3>
+<p>Loads evaluation queries as <code>(query_id, query_text)</code> tuples. Imports <code>ir_win_fix</code> (side effect) then <code>ir_datasets</code>, loads the dataset by <code>spec.ir_datasets_id</code>, iterates <code>queries_iter()</code> extracting text via <code>_query_text</code> with the spec's <code>query_text_attrs</code>, and stops once <code>limit</code> queries are collected.</p>
+<h3 id="def-load_qrelsspec-datasetspec-dictstr-dictstr-int"><code>def load_qrels(spec: DatasetSpec) -&gt; dict[str, dict[str, int]]</code></h3>
+<p>Loads relevance judgments as a nested dict <code>{query_id: {doc_id: relevance}}</code>. Imports <code>ir_win_fix</code> then <code>ir_datasets</code>, iterates <code>qrels_iter()</code>, building per-query inner dicts (relevance cast to <code>int</code>).</p>
+<h2 id="ir_coretextpreprocessingpy"><code>ir_core/text/preprocessing.py</code></h2>
+<p><strong>Purpose:</strong> The canonical text-normalization pipeline shared by documents and queries, ensuring query terms and index terms share a term space; reproduces the exact pipeline used to build the corpus JSON.</p>
+<p>On import it ensures NLTK resources (<code>punkt_tab</code>, <code>punkt</code>, <code>stopwords</code>, <code>averaged_perceptron_tagger_eng</code>, <code>wordnet</code>, <code>omw-1.4</code>) are present (downloading missing ones quietly), then builds module singletons: <code>_STEMMER</code> (Porter), <code>_LEMMATIZER</code> (WordNet), <code>_STOPWORDS_EN</code>, <code>_PUNCT_TABLE</code>.</p>
+<h3 id="def-_wordnet_postreebank_tag-str"><code>def _wordnet_pos(treebank_tag: str)</code></h3>
+<p>Maps a Penn Treebank POS tag to the WordNet POS constant (<code>J</code>→adj, <code>N</code>→noun, <code>V</code>→verb, <code>R</code>→adverb; default noun), improving lemmatization.</p>
+<h3 id="def-processtext-str-lowercase-bool-true-remove_punctuation-bool-true-remove_stopwords-bool-true-do_lemmatize-bool-false-do_stemming-bool-true-liststr"><code>def process(text: str, *, lowercase: bool = True, remove_punctuation: bool = True, remove_stopwords: bool = True, do_lemmatize: bool = False, do_stemming: bool = True) -&gt; list[str]</code></h3>
+<p>The single source of truth for normalizing text into tokens, applied identically to documents and queries. Short-circuits to <code>[]</code> for empty input, then optionally lowercases, strips punctuation, word-tokenizes keeping only alphabetic tokens, optionally drops stopwords, optionally lemmatizes using POS tags, and optionally Porter-stems. The defaults (stemming on, lemmatization off) match how the corpus JSON was generated, guaranteeing query/index term-space agreement.</p>
+<h3 id="def-stemterm-str-str"><code>def stem(term: str) -&gt; str</code></h3>
+<p>Stems a single term (lowercase + Porter). Used by query expansion so injected synonyms land in the same stemmed term space as the index.</p>
+<h2 id="ir_corequeryprocessingpy"><code>ir_core/query/processing.py</code></h2>
+<p><strong>Purpose:</strong> Implements query processing (requirement #4) by normalizing the raw query with the same pipeline as the documents and packaging it into a <code>QueryContext</code>.</p>
+<h3 id="def-build_contextraw_query-str-bm25_k1-optionalfloat-none-bm25_b-optionalfloat-none-querycontext"><code>def build_context(raw_query: str, bm25_k1: Optional[float] = None, bm25_b: Optional[float] = None) -&gt; QueryContext</code></h3>
+<p>Builds a <code>QueryContext</code>: stores the raw query (coercing falsy to <code>""</code>), tokenizes it via <code>process</code> with default flags (so query and index terms match), and passes through optional per-query BM25 overrides.</p>
+<h2 id="ir_corequeryrefinementpy"><code>ir_core/query/refinement.py</code></h2>
+<p><strong>Purpose:</strong> Implements query refinement (requirement #5) — spell correction, WordNet synonym expansion, query suggestion/auto-completion, and history-based personalization — in a corpus-aware way: corrections and expansion terms are only kept when they occur in the index (<code>df &gt; 0</code>).</p>
+<p>On import it ensures NLTK <code>words</code> and <code>wordnet</code> corpora exist, builds <code>_ENGLISH</code> (lowercased English word set), and defines <code>_LETTERS</code> and <code>_WORD_RE</code>.</p>
+<h3 id="def-_edits1word-str-setstr"><code>def _edits1(word: str) -&gt; set[str]</code></h3>
+<p>Generates the full set of strings at edit-distance 1 (Norvig): deletions, transpositions, replacements, and insertions, returned as a set.</p>
+<h3 id="class-refinementresult">class <code>RefinementResult</code></h3>
+<p>A dataclass bundling a refinement pass's output. Fields: <code>original</code>, <code>corrected</code> (after spell-correction), <code>refined_raw</code> (corrected + synonym words, for BERT), <code>refined_tokens</code> (corrected + expansion tokens, stemmed, for lexical retrieval), <code>corrections</code> (<code>{wrong: right}</code>), <code>expansions</code> (synonym words added), <code>suggestions</code> (suggested queries), <code>applied</code> (which features ran and their outputs).</p>
+<h4 id="to_dictself-dict_1"><code>to_dict(self) -&gt; dict</code></h4>
+<p>Serializes all eight fields into a plain dict for JSON responses.</p>
+<h3 id="class-queryrefiner">class <code>QueryRefiner</code></h3>
+<p>Corpus-aware refiner using an <code>InvertedIndex</code> to validate/rank candidate corrections, expansions, and suggestions against the actual corpus vocabulary.</p>
+<h4 id="__init__self-index-invertedindex"><code>__init__(self, index: InvertedIndex)</code></h4>
+<p>Stores the <code>InvertedIndex</code>; all methods consult it for document frequencies and vocabulary samples.</p>
+<h4 id="_best_correctionself-word-str-optionalstr"><code>_best_correction(self, word: str) -&gt; Optional[str]</code></h4>
+<p>Picks the best spell-correction for one word, or <code>None</code>. Declines when the word is already a known English word, ≤3 chars, when <code>_ENGLISH</code> is empty, or when its stem already exists in the index. Otherwise gathers edit-distance-1 real-word candidates (falling back to distance-2) and chooses the one with the highest corpus <code>df</code>, returning it only if that df &gt; 0 — so corrections are corpus-attested.</p>
+<h4 id="correctself-query-str-tuplestr-dict"><code>correct(self, query: str) -&gt; tuple[str, dict]</code></h4>
+<p>Spell-corrects an entire query via <code>_WORD_RE.sub</code> with a per-word callback that substitutes <code>_best_correction</code> when a different valid fix is found, recording each change. Returns the corrected query and the corrections dict.</p>
+<h4 id="expandself-query-str-max_per_word-int-2-liststr"><code>expand(self, query: str, max_per_word: int = 2) -&gt; list[str]</code></h4>
+<p>Adds up to <code>max_per_word</code> WordNet synonyms per word. Seeds a <code>seen</code> set with original token stems, iterates synsets/lemmas, skips multi-word lemmas and the word itself, stems each candidate, and keeps only candidates whose stem is unseen and whose index <code>df &gt; 0</code>. Returns the added synonyms.</p>
+<h4 id="suggestself-query-str-history-optionalliststr-none-limit-int-5-liststr"><code>suggest(self, query: str, history: Optional[list[str]] = None, limit: int = 5) -&gt; list[str]</code></h4>
+<p>Produces up to <code>limit</code> suggestions: first past queries from <code>history</code> sharing a processed token with the current query (excluding an exact repeat), then auto-completions of the last word via <code>index.vocab_sample(...)</code>. De-duplicates preserving order and truncates to <code>limit</code>.</p>
+<h4 id="history_termsself-history-optionalliststr-query-str-max_terms-int-3-liststr"><code>history_terms(self, history: Optional[list[str]], query: str, max_terms: int = 3) -&gt; list[str]</code></h4>
+<p>Extracts a few salient terms from related past queries to bias retrieval. Returns <code>[]</code> with no history; otherwise walks history most-recent-first and collects tokens from queries sharing a token with the current query that are not in the current query, not already collected, and present in the index, stopping at <code>max_terms</code>.</p>
+<h4 id="refineself-query-str-do_spell-bool-true-do_expand-bool-true-use_history-bool-true-history-optionalliststr-none-max_per_word-int-2-refinementresult"><code>refine(self, query: str, *, do_spell: bool = True, do_expand: bool = True, use_history: bool = True, history: Optional[list[str]] = None, max_per_word: int = 2) -&gt; RefinementResult</code></h4>
+<p>The one-shot orchestrator. Optionally spell-corrects, then optionally expands synonyms on the corrected text, then optionally derives history terms. Builds <code>refined_raw</code> (corrected text + synonym words, for BERT) and <code>refined_tokens</code> (processed corrected tokens + stemmed expansions + history terms, for lexical retrieval), always computes <code>suggestions</code>, and records what was applied.</p>
+<hr />
+<h2 id="section-c-indexing-layer">Section C — Indexing Layer</h2>
+<h2 id="ir_coreindexinverted_indexpy"><code>ir_core/index/inverted_index.py</code></h2>
+<p><strong>Purpose:</strong> Disk-backed inverted index built on SQLite that streams the preprocessed corpus to disk and serves as the shared substrate (postings, document frequencies, IDF, per-document TF-IDF norms) for both the TF-IDF/VSM and BM25 scorers.</p>
+<h3 id="def-_db_pathspec-datasetspec-str"><code>def _db_path(spec: DatasetSpec) -&gt; str</code></h3>
+<p>Returns the absolute path to the SQLite database file (<code>inverted_index.sqlite</code>) inside the dataset's index directory.</p>
+<h3 id="def-_compress_texttext-str-optionalbytes"><code>def _compress_text(text: str) -&gt; Optional[bytes]</code></h3>
+<p>zlib-compresses the full document text (UTF-8, level 6) so the complete, untruncated text is stored compactly as a BLOB. Returns <code>None</code> for empty input so no blob is stored.</p>
+<h3 id="def-_decompress_textvalue-str"><code>def _decompress_text(value) -&gt; str</code></h3>
+<p>Inverse of <code>_compress_text</code>: zlib-decompresses a BLOB to a string. Tolerates legacy plain-<code>str</code> rows (returned as-is) and <code>None</code> (returns <code>""</code>), and on <code>zlib.error</code>/<code>OSError</code> returns <code>""</code> so corrupt/old indexes still read.</p>
+<h3 id="def-_connectpath-str-sqlite3connection"><code>def _connect(path: str) -&gt; sqlite3.Connection</code></h3>
+<p>Opens a SQLite connection tuned for bulk build and read throughput. Sets <code>check_same_thread=False</code> (so the engine can reuse one connection across threads such as Streamlit reruns), WAL journaling, <code>synchronous=NORMAL</code>, in-memory temp store, ~200 MB page cache, and registers Python <code>LOG</code>/<code>SQRT</code> user functions so SQL-side weighting uses the same base-e log semantics as the Python scorer.</p>
+<h3 id="class-posting">class <code>Posting</code></h3>
+<p>A dataclass for one decoded posting joined with doc metadata: <code>doc_rowid: int</code>, <code>tf: int</code>, <code>length: int</code>, <code>tfidf_norm: float</code>. Carrying the norm on the posting avoids a second lookup during scoring.</p>
+<h3 id="class-invertedindex">class <code>InvertedIndex</code></h3>
+<p>Read/build interface over the SQLite inverted index for one dataset.</p>
+<h4 id="__init__self-spec-datasetspec"><code>__init__(self, spec: DatasetSpec)</code></h4>
+<p>Stores the spec, computes the DB path, and initializes lazy caches (<code>_conn</code>, <code>_num_docs</code>, <code>_avgdl</code>) to <code>None</code>. No I/O here.</p>
+<h4 id="connself-sqlite3connection-property"><code>conn(self) -&gt; sqlite3.Connection</code> (property)</h4>
+<p>Lazily opens and caches the read connection (raising <code>FileNotFoundError</code> with a build hint if the file is missing).</p>
+<h4 id="existsself-bool"><code>exists(self) -&gt; bool</code></h4>
+<p>Whether the SQLite file is present, without opening a connection. Used by the engine to decide if a dataset is queryable.</p>
+<h4 id="closeself"><code>close(self)</code></h4>
+<p>Closes the cached connection and resets <code>_conn</code>, allowing a later reopen. Called before a rebuild deletes the file.</p>
+<h4 id="buildself-limit-optionalint-none-keep_raw-bool-true-log_every-int-5000-dict"><code>build(self, limit: Optional[int] = None, keep_raw: bool = True, log_every: int = 5000) -&gt; dict</code></h4>
+<p>Builds the entire index from scratch by streaming the corpus (idempotent — deletes any existing <code>.sqlite</code>/<code>-wal</code>/<code>-shm</code> first). Steps: (1) create <code>meta</code>, <code>docs</code>, <code>terms</code>, <code>postings</code> tables; (2) iterate <code>iter_docs</code>, assigning each doc a 1-based <code>rowid</code>, computing a token <code>Counter</code> and length, optionally storing the zlib-compressed raw text, batching <code>docs</code>/<code>postings</code> inserts (flushing every 200k postings); (3) compute per-term <code>df</code> via one <code>GROUP BY</code> over postings; (4) set smoothed <code>idf = ln(N/df)</code> in SQL; (5) create B-tree indexes on <code>postings(term)</code>, <code>postings(doc_rowid)</code>, and a unique <code>docs(doc_id)</code>; (6) compute each document's TF-IDF L2 norm in a single linear Python pass over the postings⋈terms join; (7) write <code>meta</code> (<code>num_docs</code>, <code>avgdl</code>, <code>total_terms</code>) and run <code>ANALYZE</code>. Returns the <code>meta</code> dict.</p>
+<h4 id="_metaself-key-str-cast"><code>_meta(self, key: str, cast)</code></h4>
+<p>Reads a single <code>meta</code> value by key and applies <code>cast</code> (e.g. <code>int</code>/<code>float</code>), returning <code>None</code> if absent.</p>
+<h4 id="num_docsself-int-property"><code>num_docs(self) -&gt; int</code> (property)</h4>
+<p>Corpus document count <code>N</code>, cached after first read from <code>meta</code>. Needed by BM25 IDF and used to compute stored TF-IDF IDF.</p>
+<h4 id="avgdlself-float-property"><code>avgdl(self) -&gt; float</code> (property)</h4>
+<p>Average document length in tokens, cached after first read. Used by BM25's length-normalization term <code>b</code>.</p>
+<h4 id="dfself-term-str-int"><code>df(self, term: str) -&gt; int</code></h4>
+<p>Document frequency of a term from <code>terms</code> (0 if unknown). Used by BM25's IDF.</p>
+<h4 id="idfself-term-str-float"><code>idf(self, term: str) -&gt; float</code></h4>
+<p>Precomputed smoothed IDF (<code>ln(N/df)</code>) of a term (0.0 if absent). Used by the TF-IDF/VSM scorer.</p>
+<h4 id="postingsself-term-str-listposting"><code>postings(self, term: str) -&gt; list[Posting]</code></h4>
+<p>All postings for a term as <code>Posting</code> objects, joining <code>postings</code> with <code>docs</code> so each carries <code>tf</code>, <code>length</code>, and <code>tfidf_norm</code>. The inner-loop input for both lexical scorers.</p>
+<h4 id="doc_metaself-term_count-bool-false"><code>doc_meta(self, term_count: bool = False)</code></h4>
+<p>Convenience accessor returning <code>(num_docs, avgdl)</code>. <code>term_count</code> is currently unused.</p>
+<h4 id="get_docsself-rowids-iterableint-dictint-dict"><code>get_docs(self, rowids: Iterable[int]) -&gt; dict[int, dict]</code></h4>
+<p>Fetches display metadata for internal <code>rowid</code>s, returning <code>{rowid: {"doc_id", "raw_text", "length"}}</code> with <code>raw_text</code> decompressed. Returns <code>{}</code> for empty input. Attaches readable text to lexical hits.</p>
+<h4 id="get_docs_by_idself-doc_ids-iterablestr-dictstr-str"><code>get_docs_by_id(self, doc_ids: Iterable[str]) -&gt; dict[str, str]</code></h4>
+<p>Maps external <code>doc_id -&gt; raw_text</code> (decompressed), chunking the IN-clause in batches of 500. Used by embedding retrievers, which key on <code>doc_id</code>.</p>
+<h4 id="rowids_forself-doc_ids-iterablestr-dictstr-int"><code>rowids_for(self, doc_ids: Iterable[str]) -&gt; dict[str, int]</code></h4>
+<p>Maps external <code>doc_id -&gt; internal rowid</code> (chunked by 500). Converts an embedding candidate set into a rowid filter so a lexical re-scorer can restrict scoring.</p>
+<h4 id="vocab_sampleself-prefix-str-limit-int-10-liststr"><code>vocab_sample(self, prefix: str, limit: int = 10) -&gt; list[str]</code></h4>
+<p>Up to <code>limit</code> vocabulary terms starting with <code>prefix</code>, ordered by descending df. Supports prefix/autocomplete suggestion.</p>
+<h4 id="all_terms_with_dfself-min_df-int-1-limit-optionalint-none"><code>all_terms_with_df(self, min_df: int = 1, limit: Optional[int] = None)</code></h4>
+<p><code>(term, df)</code> rows for all terms with <code>df &gt;= min_df</code>, descending by df, optionally capped. Used for corpus stats and refinement vocabularies.</p>
+<h2 id="ir_coreindexvector_storepy"><code>ir_core/index/vector_store.py</code></h2>
+<p><strong>Purpose:</strong> Disk-backed dense-vector store for the embedding representations; vectors are streamed to disk as gzip-compressed L2-normalized float32 and, at search time, inflated once into memory and scored by batched matrix-vector products (dot product = cosine).</p>
+<h3 id="def-_pathsspec-datasetspec-model-str"><code>def _paths(spec: DatasetSpec, model: str)</code></h3>
+<p>Returns the triple of paths for a model: the gzip'd float32 vectors (<code>emb_&lt;model&gt;.vectors.f32.gz</code>), the plain JSON meta (<code>.meta.json</code>), and the gzip'd doc-id sidecar (<code>.docids.json.gz</code>). Meta stays uncompressed so <code>N</code>/<code>dim</code> can be read before inflating the vectors.</p>
+<h3 id="class-vectorstorewriter">class <code>VectorStoreWriter</code></h3>
+<p>Streams float32 rows to disk during a build; the caller invokes <code>add</code> per batch then <code>close</code>.</p>
+<h4 id="__init__self-spec-datasetspec-model-str-dim-int"><code>__init__(self, spec: DatasetSpec, model: str, dim: int)</code></h4>
+<p>Ensures the index dir exists, resolves the three paths, records <code>model</code>/<code>dim</code>, initializes <code>n</code> and the <code>doc_ids</code> accumulator, and opens the gzip vector file for binary writing (level 6), holding the handle open across <code>add</code> calls.</p>
+<h4 id="addself-doc_ids-liststr-vectors-npndarray"><code>add(self, doc_ids: list[str], vectors: np.ndarray)</code></h4>
+<p>Appends a batch: coerces to float32, promotes a 1-D vector to a row, L2-normalizes each row (guarding zero-norm) so a later dot product equals cosine, writes raw bytes to the gzip stream, and extends the doc-id list and <code>n</code>.</p>
+<h4 id="closeself_1"><code>close(self)</code></h4>
+<p>Closes the gzip vector stream, writes the gzip'd JSON doc-id sidecar, and writes the plain JSON meta (<code>model</code>, <code>dim</code>, <code>n</code>).</p>
+<h3 id="class-vectorstore">class <code>VectorStore</code></h3>
+<p>Read-only view over a built vector store used for cosine search.</p>
+<h4 id="__init__self-spec-datasetspec-model-str"><code>__init__(self, spec: DatasetSpec, model: str)</code></h4>
+<p>Resolves the three paths and initializes lazy caches (<code>_vectors</code>, <code>_doc_ids</code>, <code>_meta</code>) to <code>None</code>.</p>
+<h4 id="existsself-bool_1"><code>exists(self) -&gt; bool</code></h4>
+<p>True only if all three files (vectors, meta, doc-ids) are present. The engine uses this to decide whether to wire up the dense retriever.</p>
+<h4 id="metaself-dict-property"><code>meta(self) -&gt; dict</code> (property)</h4>
+<p>Lazily loads/caches the plain JSON meta dict. Read before inflating vectors so the shape is known.</p>
+<h4 id="doc_idsself-liststr-property"><code>doc_ids(self) -&gt; list[str]</code> (property)</h4>
+<p>Lazily loads/caches the gzip'd JSON list of doc-ids, ordered row-for-row with the vector matrix.</p>
+<h4 id="_id_to_rowself-dictstr-int-property"><code>_id_to_row(self) -&gt; dict[str, int]</code> (property)</h4>
+<p>Lazily builds/caches a <code>doc_id -&gt; row-index</code> map for subset scoring.</p>
+<h4 id="score_subsetself-query_vec-npndarray-doc_ids-liststr-dictstr-float"><code>score_subset(self, query_vec: np.ndarray, doc_ids: list[str]) -&gt; dict[str, float]</code></h4>
+<p>Cosine of the query against a specific subset (for serial-hybrid re-ranking). L2-normalizes the query (returns <code>{}</code> on a zero query), resolves requested doc-ids to rows, dot-products those rows, returns <code>{doc_id: cosine}</code>. Skips unknown doc-ids.</p>
+<h4 id="vectorsself-npndarray-property"><code>vectors(self) -&gt; np.ndarray</code> (property)</h4>
+<p>Inflates the gzip'd float32 blob once into a resident <code>(n, dim)</code> array via <code>np.frombuffer(...).reshape(...)</code>, caching it. Decompression is a one-time first-access cost.</p>
+<h4 id="searchself-query_vec-npndarray-top_k-int-10-batch-int-100_000-listtuplestr-float"><code>search(self, query_vec: np.ndarray, top_k: int = 10, batch: int = 100_000) -&gt; list[tuple[str, float]]</code></h4>
+<p>Brute-force cosine top-k. Normalizes the query (returns <code>[]</code> if zero), processes the matrix in row batches, reduces each batch's dot products to a candidate top-k via <code>argpartition</code>, accumulates, and prunes back to the global top-k after each batch (memory-bounded running top-k). Sorts survivors descending and returns <code>[(doc_id, score)]</code>.</p>
+<hr />
+<h2 id="section-d-representation-layer">Section D — Representation Layer</h2>
+<h2 id="ir_corerepresentation__init__py"><code>ir_core/representation/__init__.py</code></h2>
+<p><strong>Purpose:</strong> Package marker documenting that every representation/scoring model exposes a uniform <code>search(query_tokens, top_k, ...) -&gt; list[SearchResult]</code> interface so the retrieval layer and hybrid combiner treat them uniformly. Contains only the module docstring.</p>
+<h2 id="ir_corerepresentationbasepy"><code>ir_core/representation/base.py</code></h2>
+<p><strong>Purpose:</strong> Defines the uniform retriever interface — a <code>QueryContext</code> carrying both the raw query and its tokens, plus <code>LexicalRetriever</code>/<code>DenseRetriever</code> wrappers — so lexical and dense models can be driven identically.</p>
+<h3 id="class-querycontext">class <code>QueryContext</code></h3>
+<p>A dataclass carrying everything any retriever needs: <code>raw: str</code> (for BERT), <code>tokens: list[str]</code> (for TF-IDF/BM25/Word2Vec), and optional per-query BM25 overrides <code>bm25_k1</code>/<code>bm25_b</code>.</p>
+<h3 id="class-lexicalretriever">class <code>LexicalRetriever</code></h3>
+<p>Uniform wrapper around the two lexical models (TF-IDF or BM25), both consuming tokens + the shared inverted index.</p>
+<h4 id="__init__self-name-str-index-invertedindex"><code>__init__(self, name: str, index: InvertedIndex)</code></h4>
+<p>Stores the model <code>name</code> and index, and eagerly constructs both a <code>TfidfVSM</code> and a <code>BM25</code>; <code>search</code>/<code>rescore</code> dispatch to the one named by <code>name</code>.</p>
+<h4 id="searchself-ctx-querycontext-top_k-int-10-listsearchresult"><code>search(self, ctx: QueryContext, top_k: int = 10) -&gt; list[SearchResult]</code></h4>
+<p>Dispatches to TF-IDF when <code>name == "tfidf"</code>, else BM25 (passing the per-query <code>bm25_k1</code>/<code>bm25_b</code>). Returns the ranked list.</p>
+<h4 id="rescoreself-ctx-querycontext-doc_ids-liststr-dictstr-float"><code>rescore(self, ctx: QueryContext, doc_ids: list[str]) -&gt; dict[str, float]</code></h4>
+<p>Re-scores a candidate set (serial hybrid). Resolves doc-ids to rowids via <code>index.rowids_for</code>, runs the configured scorer restricted to those rowids, and returns <code>{doc_id: score}</code> (or <code>{}</code> if none resolve).</p>
+<h3 id="class-denseretriever">class <code>DenseRetriever</code></h3>
+<p>Uniform wrapper around an embedding model presenting the same surface as <code>LexicalRetriever</code>.</p>
+<h4 id="__init__self-name-str-retriever-embeddingretriever"><code>__init__(self, name: str, retriever: EmbeddingRetriever)</code></h4>
+<p>Stores the <code>name</code> and the underlying <code>EmbeddingRetriever</code> to delegate to.</p>
+<h4 id="searchself-ctx-querycontext-top_k-int-10-listsearchresult_1"><code>search(self, ctx: QueryContext, top_k: int = 10) -&gt; list[SearchResult]</code></h4>
+<p>Delegates to the embedding retriever's <code>search</code>, passing the <strong>raw</strong> query (encoders work on text, not tokens).</p>
+<h4 id="rescoreself-ctx-querycontext-doc_ids-liststr-dictstr-float_1"><code>rescore(self, ctx: QueryContext, doc_ids: list[str]) -&gt; dict[str, float]</code></h4>
+<p>Delegates to the embedding retriever's <code>rescore</code> with the raw query and candidate doc-ids. Used as the stage-2 re-ranker in serial hybrid.</p>
+<h2 id="ir_corerepresentationtfidfpy"><code>ir_core/representation/tfidf.py</code></h2>
+<p><strong>Purpose:</strong> Vector Space Model with TF-IDF (<code>ltc</code>) weighting and cosine similarity (requirement #2, model 1); document vectors are never fully materialized — the dot product is accumulated term-by-term over the postings and divided by the precomputed per-document and query L2 norms.</p>
+<h3 id="class-tfidfvsm">class <code>TfidfVSM</code></h3>
+<p>The TF-IDF/cosine scorer (<code>name = "tfidf"</code>).</p>
+<h4 id="__init__self-index-invertedindex_1"><code>__init__(self, index: InvertedIndex)</code></h4>
+<p>Stores the shared inverted index (source of IDF, postings, norms).</p>
+<h4 id="_query_weightsself-query_tokens-liststr-dictstr-float"><code>_query_weights(self, query_tokens: list[str]) -&gt; dict[str, float]</code></h4>
+<p>Computes the query-side <code>ltc</code> weights: counts query term frequencies and assigns <code>weight = (1 + ln tf) * idf(t)</code> for terms with positive IDF (others dropped).</p>
+<h4 id="searchself-query_tokens-liststr-top_k-int-10-candidate_filter-optionalsetint-none-listsearchresult"><code>search(self, query_tokens: list[str], top_k: int = 10, candidate_filter: Optional[set[int]] = None) -&gt; list[SearchResult]</code></h4>
+<p>Computes cosine similarity between the query and every document containing a query term. Builds query weights and norm, then for each query term iterates its postings accumulating <code>wq * wd</code> where <code>wd = (1 + ln tf) * idf</code>, recording each doc's precomputed <code>tfidf_norm</code>. An optional <code>candidate_filter</code> restricts scoring to given rowids. Normalizes each dot product to a cosine by <code>doc_norm * query_norm</code>, sorts descending, truncates to <code>top_k</code>, and attaches display metadata.</p>
+<h2 id="ir_corerepresentationbm25py"><code>ir_core/representation/bm25.py</code></h2>
+<p><strong>Purpose:</strong> BM25/Okapi probabilistic scorer (requirement #2, model 3) over the same inverted index as TF-IDF, exposing <code>k1</code> (term-frequency saturation) and <code>b</code> (length normalization) per query.</p>
+<h3 id="class-bm25">class <code>BM25</code></h3>
+<p>The BM25/Okapi scorer (<code>name = "bm25"</code>).</p>
+<h4 id="__init__self-index-invertedindex-params-optionalbm25params-none"><code>__init__(self, index: InvertedIndex, params: Optional[BM25Params] = None)</code></h4>
+<p>Stores the index and default <code>BM25Params</code>, which supply <code>k1</code>/<code>b</code> when a query doesn't override them.</p>
+<h4 id="_bm25_idfn-int-df-int-float-staticmethod"><code>_bm25_idf(N: int, df: int) -&gt; float</code> (staticmethod)</h4>
+<p>Robertson/Spärck-Jones IDF <code>ln(1 + (N - df + 0.5)/(df + 0.5))</code>. The leading <code>1 +</code> keeps IDF non-negative even for very frequent terms.</p>
+<h4 id="searchself-query_tokens-liststr-top_k-int-10-k1-optionalfloat-none-b-optionalfloat-none-candidate_filter-optionalsetint-none-listsearchresult"><code>search(self, query_tokens: list[str], top_k: int = 10, k1: Optional[float] = None, b: Optional[float] = None, candidate_filter: Optional[set[int]] = None) -&gt; list[SearchResult]</code></h4>
+<p>Scores with the BM25 Okapi formula. Resolves effective <code>k1</code>/<code>b</code> (per-query overrides else defaults), reads <code>N</code>/<code>avgdl</code>, then for each unique query term with <code>df &gt; 0</code> computes its IDF and iterates postings, adding <code>idf * (tf*(k1+1)) / (tf + k1*(1 - b + b*(length/avgdl)))</code>. An optional <code>candidate_filter</code> restricts to given rowids. Sorts descending, truncates to <code>top_k</code>, decorates with display metadata.</p>
+<h2 id="ir_corerepresentationembeddingspy"><code>ir_core/representation/embeddings.py</code></h2>
+<p><strong>Purpose:</strong> The two embedding representations (requirement #2, model 2): a BERT sentence-transformer encoder and the PyTorch Word2Vec encoder, plus build functions that stream the corpus into a <code>VectorStore</code>, and the shared <code>EmbeddingRetriever</code> that encodes a query and runs cosine search.</p>
+<h3 id="class-bertencoder">class <code>BertEncoder</code></h3>
+<p>Lazy wrapper around a sentence-transformers model (<code>name = "bert"</code>).</p>
+<h4 id="__init__self-model_name-str-bert_model_name"><code>__init__(self, model_name: str = BERT_MODEL_NAME)</code></h4>
+<p>Stores the model name and defers loading (<code>_model = None</code>).</p>
+<h4 id="modelself-property"><code>model(self)</code> (property)</h4>
+<p>Lazily imports <code>sentence_transformers</code> and instantiates the model on first use, caching it.</p>
+<h4 id="dimself-int-property"><code>dim(self) -&gt; int</code> (property)</h4>
+<p>Returns embedding dimensionality, using <code>get_embedding_dimension</code> if present else <code>get_sentence_embedding_dimension</code> (handling library version differences).</p>
+<h4 id="encode_textsself-texts-liststr-batch_size-int-64-npndarray"><code>encode_texts(self, texts: list[str], batch_size: int = 64) -&gt; np.ndarray</code></h4>
+<p>Encodes a list of texts into a float32 array (progress bar off, numpy out). Used at build time and for queries.</p>
+<h4 id="encode_queryself-text-str-npndarray"><code>encode_query(self, text: str) -&gt; np.ndarray</code></h4>
+<p>Encodes a single query via <code>encode_texts([text])[0]</code>.</p>
+<h3 id="class-word2vecencoder">class <code>Word2VecEncoder</code></h3>
+<p>Adapts a trained <code>Word2VecModel</code> to the encoder interface (<code>name = "word2vec"</code>).</p>
+<h4 id="__init__self-model-word2vecmodel"><code>__init__(self, model: Word2VecModel)</code></h4>
+<p>Stores the trained Word2Vec model.</p>
+<h4 id="dimself-int-property_1"><code>dim(self) -&gt; int</code> (property)</h4>
+<p>Returns the model's vector dimensionality.</p>
+<h4 id="encode_queryself-text-str-npndarray_1"><code>encode_query(self, text: str) -&gt; np.ndarray</code></h4>
+<p>Preprocesses the raw query with the shared <code>process</code> tokenizer and returns the mean of its in-vocabulary word vectors, matching how documents were embedded.</p>
+<h3 id="def-build_bert_indexspec-datasetspec-limit-optionalint-none-batch_size-int-256-log_every-int-2560-dict"><code>def build_bert_index(spec: DatasetSpec, limit: Optional[int] = None, batch_size: int = 256, log_every: int = 2560) -&gt; dict</code></h3>
+<p>Builds the BERT vector store by streaming the corpus through a <code>VectorStoreWriter</code>: batches doc-ids and text (falling back to joined tokens when raw text is missing), encodes each full batch, writes the (L2-normalized at write time) vectors, flushes a trailing partial batch. Returns a summary dict.</p>
+<h3 id="def-build_word2vec_indexspec-datasetspec-model-word2vecmodel-limit-optionalint-none-batch_size-int-4096-log_every-int-20000-dict"><code>def build_word2vec_index(spec: DatasetSpec, model: Word2VecModel, limit: Optional[int] = None, batch_size: int = 4096, log_every: int = 20000) -&gt; dict</code></h3>
+<p>Builds the Word2Vec document vector store: computes each doc's mean-of-token-vectors embedding, <code>np.vstack</code>s each batch, streams through a <code>VectorStoreWriter</code>, flushes the trailing batch. Returns a summary dict.</p>
+<h3 id="class-embeddingretriever">class <code>EmbeddingRetriever</code></h3>
+<p>Cosine search over a stored embedding model; the optional inverted index attaches display text to hits.</p>
+<h4 id="__init__self-spec-datasetspec-model_name-str-encoder-index-optionalinvertedindex-none"><code>__init__(self, spec: DatasetSpec, model_name: str, encoder, index: Optional[InvertedIndex] = None)</code></h4>
+<p>Stores the model name, opens a read-only <code>VectorStore</code>, and keeps the query encoder and optional inverted index.</p>
+<h4 id="searchself-query_text-str-top_k-int-10-listsearchresult"><code>search(self, query_text: str, top_k: int = 10) -&gt; list[SearchResult]</code></h4>
+<p>Encodes the query; returns <code>[]</code> on an all-zero vector. Otherwise runs <code>VectorStore.search</code> for top-k <code>(doc_id, cosine)</code>, fetches raw text for those doc-ids when available, and returns ranked <code>SearchResult</code>s.</p>
+<h4 id="rescoreself-query_text-str-doc_ids-liststr-dictstr-float"><code>rescore(self, query_text: str, doc_ids: list[str]) -&gt; dict[str, float]</code></h4>
+<p>Encodes the query (returns <code>{}</code> on a zero vector) and computes cosine against a candidate subset via <code>VectorStore.score_subset</code>. Used as a stage-2 serial-hybrid re-ranker.</p>
+<h2 id="ir_corerepresentationword2vecpy"><code>ir_core/representation/word2vec.py</code></h2>
+<p><strong>Purpose:</strong> A genuine skip-gram Word2Vec model with negative sampling implemented directly in PyTorch (gensim has no Python 3.14 wheel); documents/queries are embedded as the mean of their in-vocabulary word vectors. This is the second embedding model alongside BERT.</p>
+<h3 id="def-_pathsspec-datasetspec"><code>def _paths(spec: DatasetSpec)</code></h3>
+<p>Returns the two artifact paths: the compressed <code>.npz</code> word matrix (<code>word2vec.vectors.npz</code>) and the gzip'd JSON vocab (<code>word2vec.vocab.json.gz</code>).</p>
+<h3 id="class-word2vecmodel">class <code>Word2VecModel</code></h3>
+<p>Holds the trained word matrix plus vocabulary and turns token lists into vectors.</p>
+<h4 id="__init__self-vectors-npndarray-vocab-dictstr-int-params-optionalword2vecparams-none"><code>__init__(self, vectors: np.ndarray, vocab: dict[str, int], params: Optional[Word2VecParams] = None)</code></h4>
+<p>Stores the <code>(V, dim)</code> float32 word matrix (already L2-normalized), the <code>term -&gt; row</code> vocab, derives <code>dim</code>, and keeps/creates <code>Word2VecParams</code>.</p>
+<h4 id="embed_tokensself-tokens-iterablestr-npndarray"><code>embed_tokens(self, tokens: Iterable[str]) -&gt; np.ndarray</code></h4>
+<p>Embeds a token list as the mean of its in-vocabulary word vectors. OOV tokens are dropped; if none remain it returns a zero vector. The standard mean-pooling representation for Word2Vec retrieval.</p>
+<h4 id="most_similarself-term-str-topn-int-10-listtuplestr-float"><code>most_similar(self, term: str, topn: int = 10) -&gt; list[tuple[str, float]]</code></h4>
+<p>Returns the <code>topn</code> most cosine-similar vocabulary terms to a term (cosine = dot since L2-normalized), excluding the term itself; <code>[]</code> for an unknown term.</p>
+<h4 id="saveself-spec-datasetspec"><code>save(self, spec: DatasetSpec)</code></h4>
+<p>Persists the model: the word matrix as compressed <code>.npz</code> and the vocab+<code>dim</code> as gzip'd JSON, ensuring the index dir exists first.</p>
+<h4 id="loadcls-spec-datasetspec-word2vecmodel-classmethod"><code>load(cls, spec: DatasetSpec) -&gt; "Word2VecModel"</code> (classmethod)</h4>
+<p>Loads a saved model: reads <code>vectors</code> from the <code>.npz</code> and <code>vocab</code> from the gzip'd JSON, reconstructing a <code>Word2VecModel</code>.</p>
+<h4 id="existscls-spec-datasetspec-bool-classmethod"><code>exists(cls, spec: DatasetSpec) -&gt; bool</code> (classmethod)</h4>
+<p>Whether both artifact files (<code>.npz</code> matrix and gzip'd vocab) are present, so the engine can decide whether to wire up the Word2Vec retriever.</p>
+<h3 id="class-_skipgram">class <code>_SkipGram</code></h3>
+<p>A <code>torch.nn.Module</code> implementing skip-gram-with-negative-sampling with separate center and context embedding tables.</p>
+<h4 id="__init__self-vocab_size-int-dim-int"><code>__init__(self, vocab_size: int, dim: int)</code></h4>
+<p>Creates <code>center</code> and <code>context</code> <code>nn.Embedding</code> tables <code>(vocab_size, dim)</code>, initializing center weights uniformly in <code>[-0.5/dim, 0.5/dim]</code> and context weights to zero.</p>
+<h4 id="forwardself-centers-contexts-negatives"><code>forward(self, centers, contexts, negatives)</code></h4>
+<p>Computes the negative-sampling loss for a batch: looks up center <code>c</code>, positive <code>pos</code>, and <code>k</code> negatives <code>neg</code>; computes <code>c·pos</code> and batched <code>neg·c</code>; applies <code>logsigmoid(pos)</code> and <code>logsigmoid(-neg).sum</code>; returns mean NLL <code>-(pos_loss + neg_loss).mean()</code>.</p>
+<h3 id="def-train_word2vectoken_stream_factory-params-optionalword2vecparams-none-seed-int-13-log_every-int-200-word2vecmodel"><code>def train_word2vec(token_stream_factory, params: Optional[Word2VecParams] = None, seed: int = 13, log_every: int = 200) -&gt; Word2VecModel</code></h3>
+<p>Trains skip-gram over a corpus. <code>token_stream_factory</code> is a callable returning a fresh document-token iterator each call, enabling multiple passes. Pass 1 builds the vocabulary (drop below <code>min_count</code>, sort by frequency, cap at <code>max_vocab</code>; raises <code>ValueError</code> if empty). Builds the negative-sampling distribution <code>freq^0.75</code>, picks CUDA if available, and trains <code>params.epochs</code> epochs: a <code>gen_pairs</code> generator yields <code>(center, context)</code> pairs using a randomly shrunk window, buffered to <code>batch_size</code> and pushed through <code>_step</code>. Finally L2-normalizes the center matrix per row and wraps it in a <code>Word2VecModel</code>.</p>
+<h3 id="def-_stepmodel-opt-centers-contexts-neg_table-k-v-device-float"><code>def _step(model, opt, centers, contexts, neg_table, k, V, device) -&gt; float</code></h3>
+<p>One optimization step: moves indices to tensors, draws <code>len(centers)*k</code> negatives via <code>torch.multinomial</code> reshaped to <code>(B, k)</code>, zeroes grads, runs the forward loss, backprops, steps Adam, returns the scalar loss.</p>
+<h2 id="ir_corerepresentationhybridpy"><code>ir_core/representation/hybrid.py</code></h2>
+<p><strong>Purpose:</strong> The hybrid representation (requirement #2, model 4) implemented both ways — parallel fusion (weighted-sum or Reciprocal Rank Fusion) and serial retrieve-then-rerank — keeping per-model component scores on each result for transparency.</p>
+<h3 id="def-_min_maxscores-dictstr-float-dictstr-float"><code>def _min_max(scores: dict[str, float]) -&gt; dict[str, float]</code></h3>
+<p>Min-max normalizes a score dict to <code>[0, 1]</code>. Returns <code>{}</code> for empty input, maps everything to <code>1.0</code> when all scores are equal, else <code>(v - lo)/(hi - lo)</code>. Makes heterogeneous model scores comparable before fusion.</p>
+<h3 id="def-parallel_hybridretrievers-dict-ctx-querycontext-top_k-int-10-fusion-str-weighted-weights-optionaldict-none-pool-int-100-listsearchresult"><code>def parallel_hybrid(retrievers: dict, ctx: QueryContext, top_k: int = 10, fusion: str = "weighted", weights: Optional[dict] = None, pool: int = 100) -&gt; list[SearchResult]</code></h3>
+<p>Runs every retriever independently (each retrieving <code>pool</code> candidates) and fuses the ranked lists. <code>weights</code> default to equal. With <code>fusion == "rrf"</code> it uses Reciprocal Rank Fusion (<code>w * 1/(60 + rank)</code> per doc, recording each model's contributing rank); otherwise (<code>weighted</code>) it min-max normalizes each model's scores and adds the weighted normalized score (recording each model's raw score). Ranks by fused score, truncates to <code>top_k</code>, returns <code>SearchResult</code>s carrying a <code>components</code> dict.</p>
+<h3 id="def-serial_hybridstage1-stage2-ctx-querycontext-top_k-int-10-candidate_k-int-100-listsearchresult"><code>def serial_hybrid(stage1, stage2, ctx: QueryContext, top_k: int = 10, candidate_k: int = 100) -&gt; list[SearchResult]</code></h3>
+<p>The retrieve-then-rerank cascade. Stage 1 (cheap, high-recall) retrieves <code>candidate_k</code> candidates (returns <code>[]</code> if none); stage 2 (expensive, semantic) re-scores only those doc-ids via <code>rescore</code>. Both score sets are min-max normalized, and each doc's final score is the stage-2 normalized score plus a tiny <code>1e-3 *</code> stage-1 tiebreak (so docs stage 2 cannot score keep stage-1 order). Ranks by stage-2 score, truncates to <code>top_k</code>, records both stages in <code>components</code>.</p>
+<h2 id="ir_coreenginepy"><code>ir_core/engine.py</code></h2>
+<p><strong>Purpose:</strong> The single retrieval entry point used by the microservices and the Streamlit UI; it lazily loads whichever indexes a dataset has, applies optional query refinement, and dispatches to the requested representation including the two hybrids.</p>
+<p>Module constants: <code>SINGLE_MODELS = ["tfidf", "bm25", "bert", "word2vec"]</code>, <code>HYBRID_MODELS = ["hybrid_parallel", "hybrid_serial"]</code>, <code>ALL_MODELS</code> their concatenation; and <code>ENGINE = Engine()</code>, a process-wide singleton.</p>
+<h3 id="class-_datasetbundle">class <code>_DatasetBundle</code></h3>
+<p>A dataclass bundling one dataset's loaded resources: <code>spec</code>, <code>index</code> (<code>InvertedIndex</code>), <code>retrievers</code> (name → retriever, only those available), <code>refiner</code> (<code>QueryRefiner</code>).</p>
+<h3 id="class-engine">class <code>Engine</code></h3>
+<h4 id="__init__self"><code>__init__(self)</code></h4>
+<p>Initializes an empty <code>_bundles</code> cache so each dataset's indexes load once and are reused.</p>
+<h4 id="_bundleself-dataset_key-str-_datasetbundle"><code>_bundle(self, dataset_key: str) -&gt; _DatasetBundle</code></h4>
+<p>Lazily loads/caches a dataset's resources. Resolves the spec, opens the <code>InvertedIndex</code> (raising <code>FileNotFoundError</code> with a build hint if absent), always wires up <code>tfidf</code> and <code>bm25</code>, adds a BERT <code>DenseRetriever</code> only if its <code>VectorStore</code> exists, and Word2Vec only if both its <code>VectorStore</code> and <code>Word2VecModel</code> artifacts exist. Builds a <code>QueryRefiner</code>, caches the bundle, returns it.</p>
+<h4 id="available_modelsself-dataset_key-str-liststr"><code>available_models(self, dataset_key: str) -&gt; list[str]</code></h4>
+<p>Returns usable model ids: the single models present, plus the two hybrids when at least two base retrievers are available.</p>
+<h4 id="refineself-dataset_key-str-query-str-do_spelltrue-do_expandtrue-use_historytrue-history-optionalliststr-none-refinementresult"><code>refine(self, dataset_key: str, query: str, *, do_spell=True, do_expand=True, use_history=True, history: Optional[list[str]] = None) -&gt; RefinementResult</code></h4>
+<p>Delegates to the dataset's <code>QueryRefiner.refine</code>, passing the spell/expand/history flags plus prior history.</p>
+<h4 id="suggestself-dataset_key-str-query-str-history-optionalliststr-none-liststr"><code>suggest(self, dataset_key: str, query: str, history: Optional[list[str]] = None) -&gt; list[str]</code></h4>
+<p>Delegates to <code>QueryRefiner.suggest</code>, returning query suggestions.</p>
+<h4 id="searchself-dataset_key-str-model-str-query-str-top_k-int-10-bm25_k1-optionalfloat-none-bm25_b-optionalfloat-none-refine_opts-optionaldict-none-history-optionalliststr-none-hybrid_opts-optionaldict-none-dict"><code>search(self, dataset_key: str, model: str, query: str, *, top_k: int = 10, bm25_k1: Optional[float] = None, bm25_b: Optional[float] = None, refine_opts: Optional[dict] = None, history: Optional[list[str]] = None, hybrid_opts: Optional[dict] = None) -&gt; dict</code></h4>
+<p>The main dispatcher. Loads the bundle, optionally refines the query (when <code>refine_opts["enabled"]</code>) to produce the effective raw query and tokens, builds a <code>QueryContext</code> via <code>build_context</code> (injecting BM25 params) and overrides its tokens with refined tokens if present. Dispatches to a single retriever, <code>_parallel</code>, or <code>_serial</code> (else <code>ValueError</code>), renumbers ranks 1..n, and returns a response dict (dataset/model/query, effective query, params, refinement <code>to_dict</code> if any, serialized results).</p>
+<h4 id="_default_pairself-b-_datasetbundle-liststr"><code>_default_pair(self, b: _DatasetBundle) -&gt; list[str]</code></h4>
+<p>Chooses a default two-model set for hybrids, preferring <code>bm25</code> + a dense model in priority order <code>["bm25", "bert", "word2vec", "tfidf"]</code>. Returns the first two available.</p>
+<h4 id="_parallelself-b-ctx-top_k-opts-listsearchresult"><code>_parallel(self, b, ctx, top_k, opts) -&gt; list[SearchResult]</code></h4>
+<p>Sets up/runs the parallel hybrid: picks names from <code>opts["models"]</code> or <code>_default_pair</code>, filters to available, raises <code>ValueError</code> if fewer than two remain, then calls <code>parallel_hybrid</code> with the chosen retrievers, <code>fusion</code> (default <code>weighted</code>), optional <code>weights</code>, and a candidate <code>pool</code> (default <code>max(100, top_k*5)</code>).</p>
+<h4 id="_serialself-b-ctx-top_k-opts-listsearchresult"><code>_serial(self, b, ctx, top_k, opts) -&gt; list[SearchResult]</code></h4>
+<p>Sets up/runs the serial hybrid: derives stage-1/stage-2 from <code>_default_pair</code> (overridable via <code>opts</code>), validates both available (else <code>ValueError</code>), and calls <code>serial_hybrid</code> with <code>candidate_k</code> (default 100).</p>
+<hr />
+<h2 id="section-e-evaluation-layer">Section E — Evaluation Layer</h2>
+<h2 id="ir_coreevalmetricspy"><code>ir_core/eval/metrics.py</code></h2>
+<p><strong>Purpose:</strong> Implements the standard IR effectiveness metrics (requirement #8). Each function takes a ranked list of <code>doc_id</code>s (best first) plus the query's relevance judgments <code>qrel = {doc_id: relevance}</code>; binary metrics treat any relevance &gt; 0 as relevant, while nDCG uses the graded relevance value as the gain.</p>
+<h3 id="def-precision_at_kranked-liststr-qrel-dictstr-int-k-int-10-float"><code>def precision_at_k(ranked: list[str], qrel: dict[str, int], k: int = 10) -&gt; float</code></h3>
+<p>Precision@k: the fraction of the top-<code>k</code> ranked docs that are relevant. Counts hits with <code>qrel.get(d, 0) &gt; 0</code> among the first <code>k</code>, returns <code>hits / k</code> (0.0 if <code>k &lt;= 0</code>). The denominator is always <code>k</code>, so a short ranking is penalized against the full cutoff.</p>
+<h3 id="def-recallranked-liststr-qrel-dictstr-int-k-int-none-none-float"><code>def recall(ranked: list[str], qrel: dict[str, int], k: int | None = None) -&gt; float</code></h3>
+<p>Recall: the fraction of all relevant docs that appear. <code>total_rel</code> counts qrel entries &gt; 0 (0.0 if none). The pool is the first <code>k</code> docs (or the whole ranking if <code>k</code> is None); returns <code>hits / total_rel</code>.</p>
+<h3 id="def-average_precisionranked-liststr-qrel-dictstr-int-k-int-none-none-float"><code>def average_precision(ranked: list[str], qrel: dict[str, int], k: int | None = None) -&gt; float</code></h3>
+<p>Average Precision (AP) for one query — the mean of precision values at each rank where a relevant doc is found. Iterating with 1-based index <code>i</code>, each relevant hit adds the running precision <code>hits / i</code>; the sum is divided by <code>total_rel</code> (0.0 if none). Averaging AP across queries yields MAP.</p>
+<h3 id="def-dcggains-listfloat-float"><code>def dcg(gains: list[float]) -&gt; float</code></h3>
+<p>Discounted Cumulative Gain for an ordered gain list: <code>sum(g / log2(i + 1))</code> over 1-based positions. The discount means deeper-rank gains contribute less. Shared by <code>ndcg_at_k</code> for both actual and ideal rankings.</p>
+<h3 id="def-ndcg_at_kranked-liststr-qrel-dictstr-int-k-int-10-float"><code>def ndcg_at_k(ranked: list[str], qrel: dict[str, int], k: int = 10) -&gt; float</code></h3>
+<p>Normalized DCG at cutoff <code>k</code> with graded gains. <code>gains</code> is the graded relevance of the top-<code>k</code> docs (0 for unjudged); <code>ideal</code> is the top-<code>k</code> graded relevances sorted descending. Returns <code>dcg(gains) / dcg(ideal)</code>, or <code>0.0</code> when IDCG is 0 — a score in <code>[0, 1]</code>.</p>
+<h3 id="def-evaluate_queryranked-liststr-qrel-dictstr-int-p_at-int-10-ndcg_at-int-10-ap_depth-int-none-none-recall_depth-int-none-none-dictstr-float"><code>def evaluate_query(ranked: list[str], qrel: dict[str, int], p_at: int = 10, ndcg_at: int = 10, ap_depth: int | None = None, recall_depth: int | None = None) -&gt; dict[str, float]</code></h3>
+<p>Scores a single query with all four metrics, returning a dict keyed <code>"P@10"</code>, <code>"Recall"</code>, <code>"AP"</code>, <code>"nDCG@10"</code>. The cutoffs control each metric (<code>ap_depth</code>/<code>recall_depth</code> None = full ranking). The dict keys are fixed strings regardless of the actual cutoff values.</p>
+<h3 id="def-aggregateper_query-listdictstr-float-dictstr-float"><code>def aggregate(per_query: list[dict[str, float]]) -&gt; dict[str, float]</code></h3>
+<p>Averages each per-query metric across queries. The mean of <code>"AP"</code> is reported as <code>"MAP"</code>; <code>Recall</code>, <code>P@10</code>, <code>nDCG@10</code> are averaged under their own names; <code>num_queries</code> records the count. Returns all-zeros with <code>num_queries: 0</code> for empty input.</p>
+<h2 id="ir_coreevalevaluatepy"><code>ir_core/eval/evaluate.py</code></h2>
+<p><strong>Purpose:</strong> The evaluation runner (requirement #8) that executes a model over a dataset's judged queries, scores each ranking against the qrels via <code>metrics</code>, and aggregates to MAP/Recall/P@10/nDCG@10. It also supports a before/after comparison of query refinement.</p>
+<h3 id="def-evaluate_modeldataset_key-str-model-str-num_queries-optionalint-50-eval_depth-int-100-bm25_k1-optionalfloat-none-bm25_b-optionalfloat-none-refine_opts-optionaldict-none-hybrid_opts-optionaldict-none-only_judged-bool-true-progressnone-dict"><code>def evaluate_model(dataset_key: str, model: str, *, num_queries: Optional[int] = 50, eval_depth: int = 100, bm25_k1: Optional[float] = None, bm25_b: Optional[float] = None, refine_opts: Optional[dict] = None, hybrid_opts: Optional[dict] = None, only_judged: bool = True, progress=None) -&gt; dict</code></h3>
+<p>Evaluates one model on one dataset. Resolves the spec, loads qrels/queries, optionally filters to only queries with qrels, caps to <code>num_queries</code>. For each query it calls <code>ENGINE.search(...)</code> with the given depth, BM25 params, refinement and hybrid options, extracts the ranked doc-ids, scores them with <code>metrics.evaluate_query</code>, and accumulates per-query results plus a rounded <code>details</code> record (with an optional <code>progress(i, n, qid)</code> callback). Returns a dict with the dataset/model, a <code>refinement_enabled</code> flag, BM25 <code>params</code>, the aggregated <code>metrics</code>, and <code>per_query</code> details.</p>
+<h3 id="def-compare_refinementdataset_key-str-model-str-num_queries-optionalint-50-eval_depth-int-100-bm25_k1none-bm25_bnone-hybrid_optsnone-progressnone-dict"><code>def compare_refinement(dataset_key: str, model: str, *, num_queries: Optional[int] = 50, eval_depth: int = 100, bm25_k1=None, bm25_b=None, hybrid_opts=None, progress=None) -&gt; dict</code></h3>
+<p>Runs the model twice to quantify refinement's effect. <code>before</code> disables refinement; <code>after</code> enables it (<code>{"enabled": True, "spell": True, "expand": True, "history": False}</code>). Computes the per-metric <code>delta</code> (after − before, 4 dp) over MAP/Recall/P@10/nDCG@10 and returns <code>{dataset, model, before, after, delta}</code>.</p>
+<hr />
+<h2 id="section-f-command-line-scripts">Section F — Command-Line Scripts</h2>
+<h2 id="scriptsbuild_indexespy"><code>scripts/build_indexes.py</code></h2>
+<p><strong>Purpose:</strong> CLI that builds every representation/index (inverted, word2vec, bert) for a dataset (requirement #3 plus the index side of #2), streaming the preprocessed corpus so it works on full multi-GB files without loading them into RAM. Inserts the project root onto <code>sys.path</code> so <code>ir_core</code> resolves when run as a script.</p>
+<h3 id="def-builddataset_key-str-models-liststr-limit-w2v_params-word2vecparams-bert_batch-int-w2v_train_limitnone"><code>def build(dataset_key: str, models: list[str], limit, w2v_params: Word2VecParams, bert_batch: int, w2v_train_limit=None)</code></h3>
+<p>Builds the requested indexes. Resolves the spec, normalizes a falsy <code>limit</code> to <code>None</code> (ALL), defaults <code>w2v_train_limit</code> to <code>limit</code> (so Word2Vec can train on a cheap sample yet embed the full corpus). Builds the inverted index if requested; trains and saves Word2Vec then builds its embedding index; builds the BERT index with <code>bert_batch</code>. Each step is timed and logged.</p>
+<h3 id="def-main"><code>def main()</code></h3>
+<p>Argparse entry point. Defines the flags, parses them, splits <code>--models</code>, constructs <code>Word2VecParams</code>, converts a <code>--w2v-train-limit</code> of 0 to None, and calls <code>build(...)</code>. Arguments: <code>--dataset</code> (required: <code>argsme | argsme_sample</code>); <code>--models</code> (default <code>"inverted,word2vec,bert"</code>); <code>--limit</code> (int, default 50000; 0 = ALL); <code>--w2v-train-limit</code> (int, default None); <code>--w2v-dim</code> (100), <code>--w2v-epochs</code> (3), <code>--w2v-min-count</code> (2); <code>--bert-batch</code> (256). <code>__main__</code> calls <code>main()</code>.</p>
+<h2 id="scriptsevaluatepy"><code>scripts/evaluate.py</code></h2>
+<p><strong>Purpose:</strong> CLI front-end for single-model evaluation (requirement #8) that prints MAP/Recall/P@10/nDCG@10 as JSON, optionally comparing the basic pipeline against the refined one. Inserts the project root onto <code>sys.path</code>.</p>
+<h3 id="def-main_1"><code>def main()</code></h3>
+<p>Parses arguments, defines a <code>prog(i, n, qid)</code> progress callback (every 10th query plus the last), and dispatches. With <code>--compare</code> it calls <code>compare_refinement(...)</code>; otherwise it builds <code>refine_opts</code> (on when <code>--refine</code>, else off), calls <code>evaluate_model(...)</code>, and trims the result to dataset/model/<code>refinement_enabled</code>/<code>metrics</code>. Prints <code>json.dumps(out, indent=2)</code>. Arguments: <code>--dataset</code> (required); <code>--model</code> (default <code>bm25</code>); <code>--num-queries</code> (50); <code>--eval-depth</code> (100); <code>--k1</code>/<code>--b</code> (BM25 overrides); <code>--compare</code> (flag); <code>--refine</code> (flag). <code>__main__</code> calls <code>main()</code>.</p>
+<h2 id="scriptsrun_full_evalpy"><code>scripts/run_full_eval.py</code></h2>
+<p><strong>Purpose:</strong> CLI that evaluates every available model on a dataset and emits a Markdown table plus a JSON dump to populate <code>docs/REPORT.md</code> (requirement #8). Inserts the project root onto <code>sys.path</code> and forces UTF-8 stdout (so the delta sign doesn't crash cp1252 consoles). Constants <code>MODEL_ORDER</code> and <code>METRICS</code> fix the column/row ordering.</p>
+<h3 id="def-md_tablerows-listdict-cols-liststr-head-str-str"><code>def md_table(rows: list[dict], cols: list[str], head: str) -&gt; str</code></h3>
+<p>Renders row dicts into a GitHub-flavored Markdown table. The header is <code>head</code> + <code>cols</code>, then a separator, then each row reads <code>r['name']</code> plus each column formatted as <code>{:.4f}</code> for floats (else stringified; missing → empty). Returns the joined table.</p>
+<h3 id="def-main_2"><code>def main()</code></h3>
+<p>Parses arguments, filters <code>MODEL_ORDER</code> to models available for the dataset, and for each runs <code>evaluate_model(...)</code> with refinement disabled, collecting a metrics row and the raw metrics. Prints the basic-pipeline table. With <code>--refine-compare</code> it runs <code>compare_refinement</code> for whichever of bm25/tfidf are available, appending before/after/delta rows. With <code>--out</code> it writes <code>{per_model, table, compare_table}</code> as JSON (UTF-8). Arguments: <code>--dataset</code> (required); <code>--num-queries</code> (49); <code>--eval-depth</code> (100); <code>--refine-compare</code> (flag); <code>--out</code> (default None). <code>__main__</code> calls <code>main()</code>.</p>
+<h2 id="scriptssmoke_testpy"><code>scripts/smoke_test.py</code></h2>
+<p><strong>Purpose:</strong> End-to-end smoke test on the built-in 5-doc sample corpus (no <code>ir_datasets</code> needed) that builds every representation, exercises each model plus both hybrids and query refinement — a quick install check. Inserts the project root onto <code>sys.path</code>.</p>
+<h3 id="def-main_3"><code>def main()</code></h3>
+<p>Builds the sample indexes (<code>InvertedIndex(SAMPLE).build(...)</code>, then <code>train_word2vec</code> with small params, saves it, builds the word2vec and BERT embedding indexes). Clears <code>ENGINE._bundles</code> to force a reload, then for the query <code>"school condoms for students"</code> prints the available models and, for each, runs <code>ENGINE.search(..., top_k=2, hybrid_opts={"fusion": "weighted"})</code> reporting the top hit. Finally calls <code>ENGINE.refine(SAMPLE.key, "shcool condom", history=["teen pregnancy"])</code>, prints corrections and expansions, and prints <code>"SMOKE TEST PASSED"</code>. <code>__main__</code> calls <code>main()</code>.</p>
+<hr />
+<h2 id="section-g-service-oriented-architecture-soa">Section G — Service-Oriented Architecture (SOA)</h2>
+<p><strong>SOA design summary.</strong> The backend is six independently deployable FastAPI processes. Five are
+domain services — Preprocessing (8001), Indexing (8002), Retrieval (8003), Ranking &amp; Evaluation
+(8004), and Query Refinement (8005) — each built via <code>common.make_app(...)</code> (so each auto-exposes
+<code>GET /health</code>) and each delegating to the shared <code>ir_core</code> library. The API Gateway (8000) is the
+only public entry point: it holds no business logic but routes/forwards every request to the
+owning service using the stdlib <code>post_json</code>/<code>get_json</code> clients, wraps downstream failures as HTTP
+502 via <code>_safe</code>, exposes a <code>/services</code> discovery roll-up, and composes services for
+<code>/search_refined</code> (calls Refinement then feeds the refined query into Retrieval). <code>run_all.py</code>
+launches all six as separate <code>uvicorn</code> subprocesses (services first, gateway last, staggered by
+1s) and terminates them all on Ctrl-C/SIGINT.</p>
+<h2 id="servicescommonpy"><code>services/common.py</code></h2>
+<p><strong>Purpose:</strong> Shared helpers for the microservices: a FastAPI app factory (with a built-in health route) and a tiny stdlib <code>urllib</code>-based HTTP client used by the gateway to call downstream services over REST, keeping services loosely coupled with no extra dependency.</p>
+<h3 id="def-make_apptitle-str-fastapi"><code>def make_app(title: str) -&gt; FastAPI</code></h3>
+<p>Creates and returns a <code>FastAPI</code> instance titled <code>title</code> (version <code>"1.0.0"</code>) with a nested <code>GET /health</code> route returning <code>{"status": "ok", "service": title}</code>. Used by all five services and the gateway.</p>
+<h3 id="def-post_jsonurl-str-payload-dict-timeout-float-6000-any"><code>def post_json(url: str, payload: dict, timeout: float = 600.0) -&gt; Any</code></h3>
+<p>Sends a JSON POST to <code>url</code>. JSON-encodes <code>payload</code> to UTF-8, builds a POST <code>Request</code> with <code>Content-Type: application/json</code>, opens it with the given timeout (default 600s for heavy retrieval/eval calls), and returns the decoded JSON response. The gateway's primary forwarding mechanism.</p>
+<h3 id="def-get_jsonurl-str-timeout-float-600-any"><code>def get_json(url: str, timeout: float = 60.0) -&gt; Any</code></h3>
+<p>Sends a GET to <code>url</code> (default 60s) and returns the parsed JSON. Used for health/discovery and read-only lookups (datasets, status, models).</p>
+<h2 id="servicesgatewaypy"><code>services/gateway.py</code></h2>
+<p><strong>Purpose:</strong> The API Gateway (port 8000) — the single public entry point implementing the Gateway/Facade pattern. It routes each call to the responsible downstream service over REST and composes multiple services when needed, so clients (including the UI) only talk to the gateway. Run with <code>uvicorn services.gateway:app --port 8000</code>. Globals: <code>app = make_app("api-gateway")</code>, <code>S = SERVICE_URLS</code>.</p>
+<h3 id="def-_safefn-a-kw"><code>def _safe(fn, *a, **kw)</code></h3>
+<p>Invokes <code>fn(*a, **kw)</code> and, on any exception, re-raises it as <code>HTTPException(status_code=502, detail="downstream error: …")</code> — a clean 502 instead of an uncaught 500.</p>
+<h3 id="get-services-handler-services_health"><code>GET /services</code> (handler <code>services_health()</code>)</h3>
+<p>Service discovery: iterates <code>SERVICE_URLS</code> (skipping <code>gateway</code>), calls <code>GET {url}/health</code> (3s timeout) on each, returning <code>{"url": ..., ...health}</code> for reachable services and <code>{"url": ..., "status": "down", "error": ...}</code> for unreachable ones, keyed by service name.</p>
+<h3 id="get-datasets-handler-datasets"><code>GET /datasets</code> (handler <code>datasets()</code>)</h3>
+<p>Forwards to the indexing service: <code>_safe(get_json, f"{S['indexing']}/datasets")</code>.</p>
+<h3 id="get-statusdataset_key-handler-statusdataset_key-str"><code>GET /status/{dataset_key}</code> (handler <code>status(dataset_key: str)</code>)</h3>
+<p>Forwards to <code>GET {indexing}/status/{dataset_key}</code>, returning its build-status payload.</p>
+<h3 id="get-modelsdataset_key-handler-modelsdataset_key-str"><code>GET /models/{dataset_key}</code> (handler <code>models(dataset_key: str)</code>)</h3>
+<p>Forwards to <code>GET {retrieval}/models/{dataset_key}</code>, returning the available retrieval models.</p>
+<h3 id="request-models">Request models</h3>
+<ul>
+<li><strong><code>SearchRequest(BaseModel)</code></strong> — <code>dataset: str</code>; <code>model: str = "bm25"</code>; <code>query: str</code>; <code>top_k: int = 10</code>; <code>bm25_k1: Optional[float] = None</code>; <code>bm25_b: Optional[float] = None</code>; <code>refine_opts: Optional[dict] = None</code>; <code>history: Optional[list[str]] = None</code>; <code>hybrid_opts: Optional[dict] = None</code>.</li>
+<li><strong><code>RefineRequest(BaseModel)</code></strong> — <code>dataset: str</code>; <code>query: str</code>; <code>spell: bool = True</code>; <code>expand: bool = True</code>; <code>history_personalize: bool = True</code>; <code>history: Optional[list[str]] = None</code>.</li>
+<li><strong><code>EvalRequest(BaseModel)</code></strong> — <code>dataset: str</code>; <code>model: str = "bm25"</code>; <code>num_queries: Optional[int] = 50</code>; <code>eval_depth: int = 100</code>; <code>bm25_k1: Optional[float] = None</code>; <code>bm25_b: Optional[float] = None</code>; <code>refine_opts: Optional[dict] = None</code>; <code>hybrid_opts: Optional[dict] = None</code>.</li>
+</ul>
+<h3 id="post-search-handler-searchreq-searchrequest"><code>POST /search</code> (handler <code>search(req: SearchRequest)</code>)</h3>
+<p>Forwards <code>req.model_dump()</code> to <code>POST {retrieval}/search</code>; returns the ranked results.</p>
+<h3 id="post-refine-handler-refinereq-refinerequest"><code>POST /refine</code> (handler <code>refine(req: RefineRequest)</code>)</h3>
+<p>Forwards to <code>POST {refinement}/refine</code>; returns the refinement result.</p>
+<h3 id="post-suggest-handler-suggestreq-refinerequest"><code>POST /suggest</code> (handler <code>suggest(req: RefineRequest)</code>)</h3>
+<p>Forwards to <code>POST {refinement}/suggest</code>; returns query suggestions.</p>
+<h3 id="post-evaluate-handler-evaluatereq-evalrequest"><code>POST /evaluate</code> (handler <code>evaluate(req: EvalRequest)</code>)</h3>
+<p>Forwards to <code>POST {ranking_eval}/evaluate</code>; returns effectiveness metrics.</p>
+<h3 id="post-compare-handler-comparereq-evalrequest"><code>POST /compare</code> (handler <code>compare(req: EvalRequest)</code>)</h3>
+<p>Forwards to <code>POST {ranking_eval}/compare</code>; returns before/after-refinement metrics.</p>
+<h3 id="post-search_refined-handler-search_refinedreq-searchrequest"><code>POST /search_refined</code> (handler <code>search_refined(req: SearchRequest)</code>)</h3>
+<p>The composition endpoint orchestrating two services. It first calls <code>POST {refinement}/refine</code> with a refine payload, then copies the original request, replaces its <code>query</code> with <code>refinement.get("refined_raw") or req.query</code>, and calls <code>POST {retrieval}/search</code>. Attaches the refinement result under <code>result["refinement"]</code> and returns the combined object.</p>
+<h2 id="servicespreprocessing_servicepy"><code>services/preprocessing_service.py</code></h2>
+<p><strong>Purpose:</strong> Preprocessing Service (port 8001). Single responsibility: turn raw text into normalized tokens using the <em>same</em> pipeline applied to the corpus (requirement #4). Global: <code>app = make_app("preprocessing-service")</code>.</p>
+<h3 id="class-processrequestbasemodel"><code>class ProcessRequest(BaseModel)</code></h3>
+<p>Fields: <code>text: str</code>; <code>do_stemming: bool = True</code>; <code>do_lemmatize: bool = False</code>; <code>remove_stopwords: bool = True</code>.</p>
+<h3 id="post-process-handler-process_textreq-processrequest"><code>POST /process</code> (handler <code>process_text(req: ProcessRequest)</code>)</h3>
+<p>Calls <code>ir_core.text.preprocessing.process(...)</code> with the request flags and returns <code>{"text", "tokens", "num_tokens"}</code>.</p>
+<h2 id="servicesindexing_servicepy"><code>services/indexing_service.py</code></h2>
+<p><strong>Purpose:</strong> Indexing Service (port 8002). Owns the inverted index and vector stores: reports build status, exposes term/vocabulary lookups, and can trigger a (capped) build. Full-corpus builds are normally done offline via <code>scripts/build_indexes.py</code>. Global: <code>app = make_app("indexing-service")</code>.</p>
+<h3 id="get-datasets-handler-datasets_1"><code>GET /datasets</code> (handler <code>datasets()</code>)</h3>
+<p>Returns <code>{"datasets": list_datasets()}</code>.</p>
+<h3 id="get-statusdataset_key-handler-statusdataset_key-str_1"><code>GET /status/{dataset_key}</code> (handler <code>status(dataset_key: str)</code>)</h3>
+<p>Resolves the dataset, constructs an <code>InvertedIndex(spec)</code>, and reports <code>inverted_index</code>/<code>bert</code>/<code>word2vec</code> existence (word2vec requires both its vector store and <code>Word2VecModel</code>). If the inverted index exists, adds <code>num_docs</code> and <code>avgdl</code> (rounded). Returns the info dict.</p>
+<h3 id="get-vocabdataset_key-handler-vocabdataset_key-str-prefix-str-limit-int-20"><code>GET /vocab/{dataset_key}</code> (handler <code>vocab(dataset_key: str, prefix: str = "", limit: int = 20)</code>)</h3>
+<p>Loads the <code>InvertedIndex</code>; if not built, returns <code>{dataset, "terms": [], "error": "index not built"}</code>. Otherwise returns <code>{dataset, "terms": idx.vocab_sample(prefix, limit=limit)}</code>.</p>
+<h3 id="class-buildrequestbasemodel"><code>class BuildRequest(BaseModel)</code></h3>
+<p>Fields: <code>dataset_key: str</code>; <code>limit: Optional[int] = 5000</code>.</p>
+<h3 id="post-build-handler-buildreq-buildrequest"><code>POST /build</code> (handler <code>build(req: BuildRequest)</code>)</h3>
+<p>Resolves the spec, calls <code>InvertedIndex(spec).build(limit=req.limit)</code>, returns <code>{"dataset", "built": True, **meta}</code>.</p>
+<h2 id="servicesretrieval_servicepy"><code>services/retrieval_service.py</code></h2>
+<p><strong>Purpose:</strong> Retrieval Service (port 8003). Owns query matching &amp; ranking (requirement #6): given a dataset, model and query it returns ranked documents, delegating to the shared <code>ENGINE</code>. BM25 <code>k1</code>/<code>b</code> are accepted per request, and hybrid options pass through. Global: <code>app = make_app("retrieval-service")</code>.</p>
+<h3 id="class-searchrequestbasemodel"><code>class SearchRequest(BaseModel)</code></h3>
+<p>Same shape as the gateway's <code>SearchRequest</code> (<code>dataset</code>, <code>model="bm25"</code>, <code>query</code>, <code>top_k=10</code>, <code>bm25_k1</code>, <code>bm25_b</code>, <code>refine_opts</code>, <code>history</code>, <code>hybrid_opts</code>).</p>
+<h3 id="get-modelsdataset_key-handler-modelsdataset_key-str_1"><code>GET /models/{dataset_key}</code> (handler <code>models(dataset_key: str)</code>)</h3>
+<p>Returns <code>{"dataset": dataset_key, "models": ENGINE.available_models(dataset_key)}</code>.</p>
+<h3 id="post-search-handler-searchreq-searchrequest_1"><code>POST /search</code> (handler <code>search(req: SearchRequest)</code>)</h3>
+<p>Delegates to <code>ENGINE.search(...)</code> with all request fields and returns the ranked list.</p>
+<h2 id="servicesranking_eval_servicepy"><code>services/ranking_eval_service.py</code></h2>
+<p><strong>Purpose:</strong> Ranking &amp; Evaluation Service (port 8004). Owns offline effectiveness measurement (requirement #8): MAP, Recall, P@10, nDCG@10 over a dataset's qrels, plus a before/after-refinement comparison. Global: <code>app = make_app("ranking-eval-service")</code>.</p>
+<h3 id="class-evalrequestbasemodel"><code>class EvalRequest(BaseModel)</code></h3>
+<p>Fields: <code>dataset</code>; <code>model="bm25"</code>; <code>num_queries: Optional[int] = 50</code>; <code>eval_depth: int = 100</code>; <code>bm25_k1</code>; <code>bm25_b</code>; <code>refine_opts</code>; <code>hybrid_opts</code>.</p>
+<h3 id="post-evaluate-handler-evaluatereq-evalrequest_1"><code>POST /evaluate</code> (handler <code>evaluate(req: EvalRequest)</code>)</h3>
+<p>Calls <code>evaluate_model(...)</code> with the request fields and returns the metric dict.</p>
+<h3 id="post-compare-handler-comparereq-evalrequest_1"><code>POST /compare</code> (handler <code>compare(req: EvalRequest)</code>)</h3>
+<p>Calls <code>compare_refinement(...)</code> to evaluate the model with refinement OFF then ON (note: <code>refine_opts</code> is not forwarded here) and returns the comparison.</p>
+<h2 id="servicesquery_refinement_servicepy"><code>services/query_refinement_service.py</code></h2>
+<p><strong>Purpose:</strong> Query Refinement Service (port 8005). Owns requirement #5: spelling correction, WordNet synonym expansion, query suggestion, and history-based personalization, delegating to <code>ENGINE</code>. Global: <code>app = make_app("query-refinement-service")</code>.</p>
+<h3 id="class-refinerequestbasemodel"><code>class RefineRequest(BaseModel)</code></h3>
+<p>Fields: <code>dataset</code>; <code>query</code>; <code>spell=True</code>; <code>expand=True</code>; <code>history_personalize=True</code>; <code>history: Optional[list[str]] = None</code>.</p>
+<h3 id="class-suggestrequestbasemodel"><code>class SuggestRequest(BaseModel)</code></h3>
+<p>Fields: <code>dataset</code>; <code>query</code>; <code>history: Optional[list[str]] = None</code>.</p>
+<h3 id="post-refine-handler-refinereq-refinerequest_1"><code>POST /refine</code> (handler <code>refine(req: RefineRequest)</code>)</h3>
+<p>Calls <code>ENGINE.refine(...)</code> and returns <code>r.to_dict()</code> (including <code>refined_raw</code>).</p>
+<h3 id="post-suggest-handler-suggestreq-suggestrequest"><code>POST /suggest</code> (handler <code>suggest(req: SuggestRequest)</code>)</h3>
+<p>Returns <code>{"query": req.query, "suggestions": ENGINE.suggest(...)}</code>.</p>
+<h2 id="servicesrun_allpy"><code>services/run_all.py</code></h2>
+<p><strong>Purpose:</strong> Dev launcher that starts every microservice plus the gateway, each as its own uvicorn subprocess, so the whole SOA backend comes up with <code>python -m services.run_all</code> (Ctrl-C to stop). <code>SERVICES</code> is an ordered list of <code>(target, port)</code> tuples (services on 8001-8005, gateway last on 8000).</p>
+<h3 id="def-main_4"><code>def main()</code></h3>
+<p>Iterates <code>SERVICES</code>, launching each via <code>subprocess.Popen([sys.executable, "-m", "uvicorn", target, "--host", "127.0.0.1", "--port", str(port), "--log-level", "warning"])</code>, collecting handles, printing each URL, sleeping 1.0s between launches (staggered startup). Prints the gateway URL, defines a nested <code>shutdown(*_)</code> that terminates all children and exits, registers it on <code>SIGINT</code>, and <code>wait()</code>s on each process (with a <code>KeyboardInterrupt</code> fallback).</p>
+<h4 id="nested-shutdown_">nested <code>shutdown(*_)</code></h4>
+<p>Cleanup closure: prints a message, calls <code>p.terminate()</code> on every launched process, and exits with status 0.</p>
+<hr />
+<h2 id="section-h-root-utility-scripts">Section H — Root Utility Scripts</h2>
+<h2 id="preprocessingpy"><code>preprocessing.py</code></h2>
+<p><strong>Purpose:</strong> Standalone NLTK-based text-preprocessing module (the original/notebook-derived pipeline used to generate the corpus JSON). On import it ensures required NLTK resources are present and prepares shared singletons (<code>_STEMMER</code>, <code>_LEMMATIZER</code>, <code>_STOPWORDS_EN</code>).</p>
+<h3 id="def-_get_wordnet_postreebank_tag"><code>def _get_wordnet_pos(treebank_tag)</code></h3>
+<p>Maps a Penn-Treebank POS tag to the WordNet POS constant for lemmatization (empty tag → noun; <code>J</code>→adj, <code>N</code>→noun, <code>V</code>→verb, <code>R</code>→adv; default noun).</p>
+<h3 id="def-preprocess_texttext-languageenglish-lowercasetrue-remove_punctuationtrue-remove_stopwordstrue-do_stemmingfalse-do_lemmatizefalse-do_pos_tagfalse-do_spell_checkfalse-use_spacyfalse"><code>def preprocess_text(text, language='english', lowercase=True, remove_punctuation=True, remove_stopwords=True, do_stemming=False, do_lemmatize=False, do_pos_tag=False, do_spell_check=False, use_spacy=False)</code></h3>
+<p>The flexible preprocessing pipeline. Returns <code>[]</code> for empty input, then: optional lowercasing; optional punctuation removal; <code>word_tokenize</code>; keep only alphabetic tokens; optional stopword removal; POS tagging (if <code>do_pos_tag</code>/<code>do_lemmatize</code>); optional lemmatization; optional Porter stemming (after lemmatization); optional spell-check via <code>pyspellchecker</code> (skipped if missing). Returns <code>{'tokens', 'pos_tags'}</code> when <code>do_pos_tag</code>, else the token list. (<code>use_spacy</code> is accepted but unused.)</p>
+<h3 id="def-clean_and_preprocessraw_text"><code>def clean_and_preprocess(raw_text)</code></h3>
+<p>Backward-compatible wrapper calling <code>preprocess_text</code> with lowercase + punctuation removal + stopword removal + stemming, returning the token list. <code>__main__</code> demonstrates both functions.</p>
+<h2 id="process_docspy"><code>process_docs.py</code></h2>
+<p><strong>Purpose:</strong> Script that iterates an <code>ir_datasets</code> dataset's documents, preprocesses each with <code>preprocessing.preprocess_text</code>, and writes <code>{"doc_id", "raw_text", "tokens"}</code> records to a JSON file. Imports <code>ir_win_fix</code> first.</p>
+<h3 id="def-_doc_textdoc"><code>def _doc_text(doc)</code></h3>
+<p>Returns the best available text for an <code>ir_datasets</code> document: prefers <code>doc.default_text()</code>, else the first present of <code>text</code>/<code>body</code>/<code>title</code>, else <code>''</code>.</p>
+<h3 id="def-process_dataset_to_jsondataset_name-out_path-limit1000-keep_rawtrue-preprocess_kwargs"><code>def process_dataset_to_json(dataset_name, out_path, limit=1000, keep_raw=True, **preprocess_kwargs)</code></h3>
+<p>Loads <code>dataset_name</code>, iterates <code>docs_iter()</code>, and for each doc computes <code>raw_text</code> and <code>tokens</code>, appending a record (plus <code>raw_text</code> when <code>keep_raw</code>). Prints progress every 1000 docs, stops at <code>limit</code> (falsy = all), writes UTF-8 JSON (<code>indent=2</code>), and returns <code>out_path</code>.</p>
+<h3 id="def-_parse_args"><code>def _parse_args()</code></h3>
+<p>Builds/returns parsed CLI args: <code>--dataset</code> (default the Args.me id), <code>--out</code> (None), <code>--limit</code> (1000; 0 = all), <code>--no-raw</code> (flag), <code>--no-stemming</code> (flag). <code>__main__</code> derives a default <code>out_path</code> from a dataset slug when <code>--out</code> is omitted and calls <code>process_dataset_to_json</code>.</p>
+<h2 id="check_readypy"><code>check_ready.py</code></h2>
+<p><strong>Purpose:</strong> Small smoke-test script verifying the Args.me dataset is downloaded and usable. Imports <code>ir_win_fix</code> before <code>ir_datasets</code>. A top-level script (no functions): loads the Args.me dataset, prints <code>docs_count()</code>, pulls one query, and prints its id and text (via <code>getattr</code> fallbacks); any exception is caught and printed.</p>
+<h2 id="download_datasetpy"><code>download_dataset.py</code></h2>
+<p><strong>Purpose:</strong> Script that pre-fetches/materializes an <code>ir_datasets</code> dataset (documents, queries, qrels) so later runs hit a warm cache.</p>
+<h3 id="def-download_datasetdataset_name"><code>def download_dataset(dataset_name)</code></h3>
+<p>Loads <code>dataset_name</code>, then forces materialization of each component: prints <code>docs_count()</code>, counts queries and qrels via <code>sum(1 for _ in ...)</code>, printing progress/counts. Any exception is caught and reported. The module calls <code>download_dataset("argsme/1.0/touche-2020-task-1/uncorrected")</code> at run time.</p>
+<h2 id="ir_win_fixpy"><code>ir_win_fix.py</code></h2>
+<p><strong>Purpose:</strong> A Windows compatibility shim for an <code>ir_datasets</code> download bug. <code>ir_datasets</code> creates its download target with <code>tempfile.NamedTemporaryFile(delete=False)</code> but never closes the handle; later <code>os.replace('&lt;tmp&gt;.tmp', '&lt;tmp&gt;')</code> fails on Windows (you cannot replace a file with an open handle → <code>WinError 5</code>/<code>WinError 32</code>). Must be imported <em>before</em> loading any dataset; importing it applies the patch.</p>
+<h3 id="class-_tempfileshim">class <code>_TempfileShim</code></h3>
+<p>A proxy standing in for the real <code>tempfile</code> module inside <code>ir_datasets.util.download</code>, ensuring named temp files release their OS handle immediately so Windows can overwrite them.</p>
+<h4 id="namedtemporaryfileself-args-kwargs"><code>NamedTemporaryFile(self, *args, **kwargs)</code></h4>
+<p>Calls the real <code>NamedTemporaryFile</code>, immediately <code>close()</code>s the result (releasing the Windows handle; the file persists because callers pass <code>delete=False</code>), and returns the closed file object so the subsequent <code>os.replace()</code> succeeds.</p>
+<h4 id="__getattr__self-name"><code>__getattr__(self, name)</code></h4>
+<p>Delegates every other attribute access to the real <code>tempfile</code> module, so the shim behaves identically except for <code>NamedTemporaryFile</code>.</p>
+<p><strong>Module-level patch:</strong> guarded by an idempotency check, it sets <code>_download.tempfile = _TempfileShim()</code>, monkey-patching only the <code>download</code> module's view of <code>tempfile</code> (the global <code>tempfile</code> is untouched).</p>
+<hr />
+<h2 id="section-i-user-interface">Section I — User Interface</h2>
+<h2 id="uiapppy"><code>ui/app.py</code></h2>
+<p><strong>Purpose:</strong> A single-page Streamlit application that is the user-facing search interface (requirement #9). It lets the user pick a dataset and representation model, tune BM25 parameters and hybrid options live, toggle query refinement, and view ranked results as cards with score bars, query-term highlighting, per-model component scores, and inline full-document expanders. It also provides an Evaluation tab (MAP/Recall/P@10/nDCG@10 plus before/after-refinement comparison) and a Help tab, and can run against the engine in-process or against the REST gateway via a sidebar toggle.</p>
+<h3 id="module-level-configuration">Module-level configuration</h3>
+<ul>
+<li><strong><code>sys.path</code> insertion:</strong> prepends the project root so <code>ir_core</code>/<code>services</code> import when Streamlit runs the file directly.</li>
+<li><strong><code>st.set_page_config(...)</code>:</strong> title <code>"IR System"</code>, icon <code>🔎</code>, <code>layout="wide"</code>, called once at import.</li>
+<li><strong><code>MODEL_LABELS</code> (dict):</strong> internal model keys → human-readable selectbox labels. Used as the model picker's <code>format_func</code>, in the header caption, spinners, and Help tab.</li>
+<li><strong><code>MODEL_HELP</code> (dict):</strong> model keys → one-line descriptions, shown under the model selectbox and in Help.</li>
+<li><strong><code>EXAMPLES</code> (dict):</strong> curated clickable example queries per dataset key. Rendered as buttons in Search and listed in Help.</li>
+<li><strong><code>CSS</code> (str):</strong> an inline <code>&lt;style&gt;</code> block styling the result cards (<code>.result-card</code>, <code>.rank-badge</code>, <code>.docid</code>, <code>.score-val</code>, <code>.score-bar</code>, <code>.comp-badge</code>, <code>.snippet</code>, <code>mark</code>, <code>.pill</code>), injected once.</li>
+<li><strong>Session defaults:</strong> seeds <code>st.session_state</code> keys via <code>setdefault</code> (<code>history=[]</code>, <code>query_box=""</code>, <code>do_search=False</code>, <code>last_resp=None</code>, <code>last_latency=0.0</code>).</li>
+</ul>
+<h3 id="class-backend-abstract-interface"><code>class Backend</code> (abstract interface)</h3>
+<p>Defines the backend contract as stub methods: <code>datasets()</code>, <code>models(ds)</code>, <code>status(ds)</code>, <code>search(**kw)</code>, <code>refine(**kw)</code>, <code>evaluate(**kw)</code>, <code>compare(**kw)</code>. Subclassed by the two backends.</p>
+<h3 id="class-inprocessbackendbackend"><code>class InProcessBackend(Backend)</code></h3>
+<p>Calls <code>ir_core</code> directly, so it works with no servers running.
+- <strong><code>__init__</code>:</strong> imports <code>ENGINE</code> (as <code>self.E</code>) and <code>evaluate_model</code>/<code>compare_refinement</code>.
+- <strong><code>datasets</code>:</strong> returns <code>list_datasets()</code>.
+- <strong><code>models(ds)</code>:</strong> returns <code>self.E.available_models(ds)</code>.
+- <strong><code>status(ds)</code>:</strong> builds a status dict by constructing <code>InvertedIndex</code> and <code>VectorStore</code> and calling <code>.exists()</code>; adds <code>num_docs</code> if the index exists.
+- <strong><code>search(**kw)</code>:</strong> pops <code>dataset</code>/<code>model</code>/<code>query</code> and forwards the rest to <code>self.E.search(...)</code>.
+- <strong><code>refine(dataset, query, history=None, **flags)</code>:</strong> calls <code>self.E.refine(...)</code> mapping <code>spell</code>/<code>expand</code>/<code>history_personalize</code> to <code>do_spell</code>/<code>do_expand</code>/<code>use_history</code>; returns <code>r.to_dict()</code>.
+- <strong><code>evaluate</code>/<code>compare</code>:</strong> pop <code>dataset</code>/<code>model</code> and delegate to the eval helpers.</p>
+<h3 id="class-gatewaybackendbackend"><code>class GatewayBackend(Backend)</code></h3>
+<p>Talks to the REST microservices (full SOA path).
+- <strong><code>__init__(base)</code>:</strong> stores <code>base.rstrip("/")</code> and imports <code>get_json</code>/<code>post_json</code>.
+- <strong><code>datasets</code>/<code>models</code>/<code>status</code>:</strong> GET the corresponding gateway endpoints.
+- <strong><code>search</code>/<code>refine</code>/<code>evaluate</code>/<code>compare</code>:</strong> POST the kwargs to the corresponding endpoint.</p>
+<h3 id="stcache_resource-def-get_backendmode-str-gateway_url-str-backend"><code>@st.cache_resource</code> <code>def get_backend(mode: str, gateway_url: str) -&gt; Backend</code></h3>
+<p>Returns a <code>GatewayBackend(gateway_url)</code> when <code>mode == "Gateway (SOA)"</code>, else <code>InProcessBackend()</code>. Cached so the backend (and its engine/clients) is built once and reused across reruns, keyed on <code>(mode, gateway_url)</code>.</p>
+<h3 id="def-highlighttext-str-terms-liststr-limit-int-none-600-str"><code>def highlight(text: str, terms: list[str], limit: int | None = 600) -&gt; str</code></h3>
+<p>HTML-escapes <code>text</code> and wraps matched query/expansion terms in <code>&lt;mark&gt;</code>. Returns <code>"&lt;em&gt;(no stored text)&lt;/em&gt;"</code> if empty. If <code>limit is not None</code> and the text exceeds it, truncates to a preview snippet; <strong>passing <code>limit=None</code> renders the complete document</strong> (used by the full-document expander). Converts newlines to <code>&lt;br&gt;</code> and highlights unique terms of length ≥ 2, longest-first, with a case-insensitive word-boundary regex.</p>
+<h3 id="def-query_termsquery-str-refinement-dict-none-liststr"><code>def query_terms(query: str, refinement: dict | None) -&gt; list[str]</code></h3>
+<p>Extracts alphabetic tokens from <code>query</code>; if a <code>refinement</code> dict is given, also appends the words of each <code>expansions</code> entry and the values of <code>corrections</code>. The result is fed into <code>highlight(...)</code>.</p>
+<h3 id="def-trigger_searchq-str-none-none"><code>def trigger_search(q: str | None = None)</code></h3>
+<p>If <code>q</code> is provided, sets <code>st.session_state.query_box = q</code> (used by example/suggestion buttons); then sets <code>st.session_state.do_search = True</code> to request a search on the next rerun.</p>
+<h3 id="def-refine_opts-dict"><code>def refine_opts() -&gt; dict</code></h3>
+<p>Returns <code>{"enabled": False}</code> when the refinement toggle is off; otherwise <code>{"enabled": True, "spell", "expand", "history"}</code> reflecting the sidebar checkboxes. Passed as <code>refine_opts=</code> to search/evaluate.</p>
+<h3 id="page-structure-tabs">Page structure / tabs</h3>
+<p><strong>Sidebar (top-to-bottom):</strong> title/caption; <strong>Backend</strong> radio (In-process / Gateway (SOA)) with a Gateway URL input when SOA is selected; a reachability check (<code>st.error</code> + <code>st.stop()</code> on failure); <strong>Dataset</strong> picker; an index-status caption (<code>📚 N docs | idx ✅/❌ · bert ✅/❌ · w2v ✅/❌</code>); model-availability check (warns with the build command and stops if none); <strong>Representation model</strong> picker with help caption; <strong>BM25 parameters</strong> expander (<code>k1</code>, <code>b</code> sliders) for bm25/hybrids; <strong>hybrid configuration</strong> (parallel: models-to-fuse multiselect + fusion method; serial: stage-1/stage-2 pickers + candidate-pool slider); <strong>Query refinement</strong> toggle revealing spelling/synonym/history checkboxes; <strong>top-k</strong> slider.</p>
+<p><strong>Header:</strong> <code>🔎 Information Retrieval System</code> plus a caption naming the active dataset and model and whether refinement is on. Then three tabs: Search, Evaluation, Help.</p>
+<p><strong>Search tab:</strong> a query input + Search button; example-query buttons; live suggestions (when refinement is on); search execution (appends to history, times the call, runs <code>backend.search(...)</code>, stores <code>last_resp</code>/<code>last_latency</code>); results rendering — an optional refinement panel (corrections/expansions/effective query), a summary line, and per-result cards (rank badge, monospace doc-id, right-floated score, score bar, highlighted 600-char snippet, per-model component badges), each followed by a <strong><code>📄 Read full document</code></strong> expander rendering the entire original document inline via <code>highlight(..., limit=None)</code>; and a search-history expander with a clear button.</p>
+<p><strong>Evaluation tab (requirement #8):</strong> controls for judged-query count and retrieval depth; an <strong>Evaluate model</strong> button (metric cards + a bar chart) and a <strong>Compare before/after refinement</strong> button (before→after metric cards with deltas + a dataframe and an explanatory caption).</p>
+<p><strong>Help tab:</strong> describes what Args.me retrieves and lists its example queries, lists every model with its description, and a Tips section.</p>
+<hr />
+<p><em>End of code reference.</em></p></main>
+</div>
+</body></html>

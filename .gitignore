@@ -1,0 +1,15 @@
+# Built indexes / model artifacts (regenerate with scripts/build_indexes.py)
+indexes/
+
+# Large preprocessed corpora
+*_processed.json
+
+# Python
+__pycache__/
+*.pyc
+.idea/
+.venv/
+venv/
+
+# HF / model caches
+.cache/
