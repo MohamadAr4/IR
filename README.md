@@ -374,15 +374,15 @@ ir_core/                       # the IR engine (importable library)
   query/refinement.py          #   spell / expand / suggest / history (corpus-aware)
   eval/metrics.py · evaluate.py#   MAP/Recall/P@10/nDCG@10 + runner
   engine.py                    #   orchestrator (Facade) used by services & UI
-services/                      # SOA backend
+services/                      # SOA backend — one package per service (app.py + router.py + service.py)
   common.py                    #   FastAPI app factory + tiny HTTP client
-  gateway.py                   #   API gateway (port 8000)
-  preprocessing_service.py     #   8001
-  indexing_service.py          #   8002
-  retrieval_service.py         #   8003
-  ranking_eval_service.py      #   8004
-  query_refinement_service.py  #   8005
   run_all.py                   #   launches all services + gateway
+  gateway/                     #   API gateway (port 8000)
+  preprocessing/               #   8001
+  indexing/                    #   8002
+  retrieval/                   #   8003
+  evaluation/                  #   8004  (ranking & evaluation)
+  query_refinement/            #   8005
 ui/app.py                      # Streamlit UI
 scripts/                       # build_indexes / evaluate / run_full_eval / smoke_test
 docs/                          # ARCHITECTURE.md · REPORT.md · CODE_REFERENCE.{md,html,pdf}

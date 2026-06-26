@@ -14,12 +14,12 @@ import sys
 import time
 
 SERVICES = [
-    ("services.preprocessing_service:app", 8001),
-    ("services.indexing_service:app", 8002),
-    ("services.retrieval_service:app", 8003),
-    ("services.ranking_eval_service:app", 8004),
-    ("services.query_refinement_service:app", 8005),
-    ("services.gateway:app", 8000),
+    ("services.preprocessing.app:app", 8001),
+    ("services.indexing.app:app", 8002),
+    ("services.retrieval.app:app", 8003),
+    ("services.evaluation.app:app", 8004),
+    ("services.query_refinement.app:app", 8005),
+    ("services.gateway.app:app", 8000),
 ]
 
 
