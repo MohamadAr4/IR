@@ -24,19 +24,22 @@ class TfidfVSM:
     def __init__(self, index: InvertedIndex):
         self.index = index
 
-    def _query_weights(self, query_tokens: list[str]) -> dict[str, float]:
+    def _query_weights(self, query_tokens: list[str],
+                       term_weights: Optional[dict[str, float]] = None) -> dict[str, float]:
         qtf = Counter(query_tokens)
         weights: dict[str, float] = {}
         for term, tf in qtf.items():
             idf = self.index.idf(term)
             if idf <= 0:
                 continue
-            weights[term] = (1.0 + math.log(tf)) * idf
+            mult = term_weights.get(term, 1.0) if term_weights else 1.0
+            weights[term] = (1.0 + math.log(tf)) * idf * mult
         return weights
 
     def search(self, query_tokens: list[str], top_k: int = 10,
-               candidate_filter: Optional[set[int]] = None) -> list[SearchResult]:
-        qw = self._query_weights(query_tokens)
+               candidate_filter: Optional[set[int]] = None,
+               term_weights: Optional[dict[str, float]] = None) -> list[SearchResult]:
+        qw = self._query_weights(query_tokens, term_weights)
         if not qw:
             return []
         q_norm = math.sqrt(sum(w * w for w in qw.values())) or 1.0

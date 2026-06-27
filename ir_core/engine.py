@@ -8,7 +8,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
-from .config import MULTILINGUAL_MODEL_NAME, DatasetSpec, get_dataset
+from .config import (MULTILINGUAL_MODEL_NAME, SYNONYM_EXPANSION_WEIGHT,
+                     DatasetSpec, get_dataset)
 from .index.inverted_index import InvertedIndex
 from .query.processing import build_context
 from .query.refinement import QueryRefiner, RefinementResult
@@ -113,6 +114,10 @@ class Engine:
         ctx = build_context(eff_raw, bm25_k1=bm25_k1, bm25_b=bm25_b)
         if eff_tokens is not None:
             ctx.tokens = eff_tokens
+        if refinement and refinement.expansion_terms:
+            # Down-weight sense-blind synonyms in the lexical query vector.
+            ctx.expansion_terms = set(refinement.expansion_terms)
+            ctx.expansion_weight = SYNONYM_EXPANSION_WEIGHT
 
         # ---- dispatch ----
         if model in b.retrievers:

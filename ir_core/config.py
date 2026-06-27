@@ -105,6 +105,12 @@ class Word2VecParams:
     max_vocab: int = 50000
 
 
+# Weight applied to synonym-expansion terms in the lexical query vector,
+# relative to the user's original query terms (1.0). Synonyms from WordNet are
+# sense-blind and easily cause topic drift, so they contribute less than the
+# real query terms. Tune in [0, 1]; 0 disables their effect, 1 = full weight.
+SYNONYM_EXPANSION_WEIGHT = float(os.environ.get("IR_SYNONYM_EXPANSION_WEIGHT", "0.4"))
+
 DEFAULT_TOP_K = 10
 
 # Microservice endpoints (host:port). Overridable via env so the gateway can

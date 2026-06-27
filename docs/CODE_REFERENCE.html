@@ -41,71 +41,125 @@ a { color: var(--blue); }
 </style>
 </head><body>
 <div class="wrap">
-<nav class="toc"><div class="toctitle">Contents</div><div class="toc">
+<nav class="toc"><div class="toctitle">Contents</div>
 <ul>
-<li><a href="#information-retrieval-system-complete-code-reference">Information Retrieval System — Complete Code Reference</a></li>
-<li><a href="#part-i-system-overview">Part I — System Overview</a></li>
-<li><a href="#part-ii-requirements-coverage">Part II — Requirements Coverage</a></li>
-<li><a href="#part-iii-architecture">Part III — Architecture</a></li>
-<li><a href="#part-iv-how-a-search-works-end-to-end">Part IV — How a Search Works (end-to-end)</a></li>
-<li><a href="#part-v-storage-compression-design">Part V — Storage &amp; Compression Design</a></li>
-<li><a href="#part-vi-directory-layout">Part VI — Directory Layout</a></li>
-<li><a href="#part-vii-code-reference-every-file-function">Part VII — Code Reference: Every File &amp; Function</a><ul>
-<li><a href="#section-a-configuration-shared-types">Section A — Configuration &amp; Shared Types</a></li>
-<li><a href="#ir_core__init__py">ir_core/__init__.py</a></li>
-<li><a href="#ir_coreconfigpy">ir_core/config.py</a></li>
-<li><a href="#ir_coretypespy">ir_core/types.py</a></li>
-<li><a href="#section-b-data-text-layer">Section B — Data &amp; Text Layer</a></li>
-<li><a href="#ir_coredatacorpuspy">ir_core/data/corpus.py</a></li>
-<li><a href="#ir_coretextpreprocessingpy">ir_core/text/preprocessing.py</a></li>
-<li><a href="#ir_corequeryprocessingpy">ir_core/query/processing.py</a></li>
-<li><a href="#ir_corequeryrefinementpy">ir_core/query/refinement.py</a></li>
-<li><a href="#section-c-indexing-layer">Section C — Indexing Layer</a></li>
-<li><a href="#ir_coreindexinverted_indexpy">ir_core/index/inverted_index.py</a></li>
-<li><a href="#ir_coreindexvector_storepy">ir_core/index/vector_store.py</a></li>
-<li><a href="#section-d-representation-layer">Section D — Representation Layer</a></li>
-<li><a href="#ir_corerepresentation__init__py">ir_core/representation/__init__.py</a></li>
-<li><a href="#ir_corerepresentationbasepy">ir_core/representation/base.py</a></li>
-<li><a href="#ir_corerepresentationtfidfpy">ir_core/representation/tfidf.py</a></li>
-<li><a href="#ir_corerepresentationbm25py">ir_core/representation/bm25.py</a></li>
-<li><a href="#ir_corerepresentationembeddingspy">ir_core/representation/embeddings.py</a></li>
-<li><a href="#ir_corerepresentationword2vecpy">ir_core/representation/word2vec.py</a></li>
-<li><a href="#ir_corerepresentationhybridpy">ir_core/representation/hybrid.py</a></li>
-<li><a href="#ir_coreenginepy">ir_core/engine.py</a></li>
-<li><a href="#section-e-evaluation-layer">Section E — Evaluation Layer</a></li>
-<li><a href="#ir_coreevalmetricspy">ir_core/eval/metrics.py</a></li>
-<li><a href="#ir_coreevalevaluatepy">ir_core/eval/evaluate.py</a></li>
-<li><a href="#section-f-command-line-scripts">Section F — Command-Line Scripts</a></li>
-<li><a href="#scriptsbuild_indexespy">scripts/build_indexes.py</a></li>
-<li><a href="#scriptsevaluatepy">scripts/evaluate.py</a></li>
-<li><a href="#scriptsrun_full_evalpy">scripts/run_full_eval.py</a></li>
-<li><a href="#scriptssmoke_testpy">scripts/smoke_test.py</a></li>
-<li><a href="#section-g-service-oriented-architecture-soa">Section G — Service-Oriented Architecture (SOA)</a></li>
-<li><a href="#servicescommonpy">services/common.py</a></li>
-<li><a href="#servicesgatewaypy">services/gateway.py</a></li>
-<li><a href="#servicespreprocessing_servicepy">services/preprocessing_service.py</a></li>
-<li><a href="#servicesindexing_servicepy">services/indexing_service.py</a></li>
-<li><a href="#servicesretrieval_servicepy">services/retrieval_service.py</a></li>
-<li><a href="#servicesranking_eval_servicepy">services/ranking_eval_service.py</a></li>
-<li><a href="#servicesquery_refinement_servicepy">services/query_refinement_service.py</a></li>
-<li><a href="#servicesrun_allpy">services/run_all.py</a></li>
-<li><a href="#section-h-root-utility-scripts">Section H — Root Utility Scripts</a></li>
-<li><a href="#preprocessingpy">preprocessing.py</a></li>
-<li><a href="#process_docspy">process_docs.py</a></li>
-<li><a href="#check_readypy">check_ready.py</a></li>
-<li><a href="#download_datasetpy">download_dataset.py</a></li>
-<li><a href="#ir_win_fixpy">ir_win_fix.py</a></li>
-<li><a href="#section-i-user-interface">Section I — User Interface</a></li>
-<li><a href="#uiapppy">ui/app.py</a></li>
+<li><a href="#information-retrieval-system-complete-code-reference">Information Retrieval System — Complete Code Reference</a>
+</li>
+<li><a href="#part-i-system-overview">Part I — System Overview</a>
+</li>
+<li><a href="#part-ii-requirements-coverage">Part II — Requirements Coverage</a>
+</li>
+<li><a href="#part-iii-architecture">Part III — Architecture</a>
+</li>
+<li><a href="#part-iv-how-a-search-works-end-to-end">Part IV — How a Search Works (end-to-end)</a>
+</li>
+<li><a href="#part-v-storage-compression-design">Part V — Storage &amp; Compression Design</a>
+</li>
+<li><a href="#part-vi-directory-layout">Part VI — Directory Layout</a>
+</li>
+<li><a href="#part-vii-code-reference-every-file-function">Part VII — Code Reference: Every File &amp; Function</a>
+<ul>
+<li><a href="#section-a-configuration-shared-types">Section A — Configuration &amp; Shared Types</a>
+</li>
+<li><a href="#ir_core__init__py">ir_core/__init__.py</a>
+</li>
+<li><a href="#ir_coreconfigpy">ir_core/config.py</a>
+</li>
+<li><a href="#ir_coretypespy">ir_core/types.py</a>
+</li>
+<li><a href="#section-b-data-text-layer">Section B — Data &amp; Text Layer</a>
+</li>
+<li><a href="#ir_coredatacorpuspy">ir_core/data/corpus.py</a>
+</li>
+<li><a href="#ir_coretextpreprocessingpy">ir_core/text/preprocessing.py</a>
+</li>
+<li><a href="#ir_corequeryprocessingpy">ir_core/query/processing.py</a>
+</li>
+<li><a href="#ir_corequeryrefinementpy">ir_core/query/refinement.py</a>
+</li>
+<li><a href="#section-c-indexing-layer">Section C — Indexing Layer</a>
+</li>
+<li><a href="#ir_coreindexinverted_indexpy">ir_core/index/inverted_index.py</a>
+</li>
+<li><a href="#ir_coreindexvector_storepy">ir_core/index/vector_store.py</a>
+</li>
+<li><a href="#section-d-representation-layer">Section D — Representation Layer</a>
+</li>
+<li><a href="#ir_corerepresentation__init__py">ir_core/representation/__init__.py</a>
+</li>
+<li><a href="#ir_corerepresentationbasepy">ir_core/representation/base.py</a>
+</li>
+<li><a href="#ir_corerepresentationtfidfpy">ir_core/representation/tfidf.py</a>
+</li>
+<li><a href="#ir_corerepresentationbm25py">ir_core/representation/bm25.py</a>
+</li>
+<li><a href="#ir_corerepresentationembeddingspy">ir_core/representation/embeddings.py</a>
+</li>
+<li><a href="#ir_corerepresentationword2vecpy">ir_core/representation/word2vec.py</a>
+</li>
+<li><a href="#ir_corerepresentationhybridpy">ir_core/representation/hybrid.py</a>
+</li>
+<li><a href="#ir_coreenginepy">ir_core/engine.py</a>
+</li>
+<li><a href="#section-e-evaluation-layer">Section E — Evaluation Layer</a>
+</li>
+<li><a href="#ir_coreevalmetricspy">ir_core/eval/metrics.py</a>
+</li>
+<li><a href="#ir_coreevalevaluatepy">ir_core/eval/evaluate.py</a>
+</li>
+<li><a href="#section-f-command-line-scripts">Section F — Command-Line Scripts</a>
+</li>
+<li><a href="#scriptsbuild_indexespy">scripts/build_indexes.py</a>
+</li>
+<li><a href="#scriptsevaluatepy">scripts/evaluate.py</a>
+</li>
+<li><a href="#scriptsrun_full_evalpy">scripts/run_full_eval.py</a>
+</li>
+<li><a href="#scriptssmoke_testpy">scripts/smoke_test.py</a>
+</li>
+<li><a href="#section-g-service-oriented-architecture-soa">Section G — Service-Oriented Architecture (SOA)</a>
+</li>
+<li><a href="#servicescommonpy">services/common.py</a>
+</li>
+<li><a href="#servicesgateway">services/gateway/</a>
+</li>
+<li><a href="#servicespreprocessing">services/preprocessing/</a>
+</li>
+<li><a href="#servicesindexing">services/indexing/</a>
+</li>
+<li><a href="#servicesretrieval">services/retrieval/</a>
+</li>
+<li><a href="#servicesevaluation">services/evaluation/</a>
+</li>
+<li><a href="#servicesquery_refinement">services/query_refinement/</a>
+</li>
+<li><a href="#servicesrun_allpy">services/run_all.py</a>
+</li>
+<li><a href="#section-h-root-utility-scripts">Section H — Root Utility Scripts</a>
+</li>
+<li><a href="#preprocessingpy">preprocessing.py</a>
+</li>
+<li><a href="#process_docspy">process_docs.py</a>
+</li>
+<li><a href="#check_readypy">check_ready.py</a>
+</li>
+<li><a href="#download_datasetpy">download_dataset.py</a>
+</li>
+<li><a href="#ir_win_fixpy">ir_win_fix.py</a>
+</li>
+<li><a href="#section-i-user-interface">Section I — User Interface</a>
+</li>
+<li><a href="#uiapppy">ui/app.py</a>
+</li>
 </ul>
 </li>
 </ul>
-</div>
 </nav>
-<main><h1 id="information-retrieval-system-complete-code-reference">Information Retrieval System — Complete Code Reference</h1>
+<main>
+<h1 id="information-retrieval-system-complete-code-reference">Information Retrieval System — Complete Code Reference</h1>
 <p><strong>Project:</strong> Service-Oriented IR System over the Args.me corpus (Touché 2020 Task 1)
 <strong>Scope:</strong> Every source file, and every function/class/method within it.
-<strong>Generated:</strong> 2026-06-25</p>
+<strong>Generated:</strong> 2026-06-26</p>
 <hr />
 <h1 id="part-i-system-overview">Part I — System Overview</h1>
 <p>This project is a complete, modular <strong>Information Retrieval (IR)</strong> system built around a single
@@ -115,7 +169,7 @@ set of <strong>command-line scripts</strong> for building indexes and running ev
 <p>It retrieves over the <strong>Args.me</strong> debate-argument corpus (387,692 documents, Touché 2020 Task 1),
 with evaluation queries and relevance judgments (qrels) pulled from the <code>ir_datasets</code> library. A
 tiny 5-document sample corpus ships for smoke tests.</p>
-<p>The system implements <strong>six retrieval models</strong> behind one uniform interface:</p>
+<p>The system implements <strong>seven retrieval models</strong> behind one uniform interface:</p>
 <table>
 <thead>
 <tr>
@@ -146,6 +200,11 @@ tiny 5-document sample corpus ships for smoke tests.</p>
 <td>cosine</td>
 </tr>
 <tr>
+<td><strong>Multilingual 🌐</strong></td>
+<td><code>paraphrase-multilingual-MiniLM-L12-v2</code> (~50 languages), shared cross-lingual space</td>
+<td>cosine</td>
+</tr>
+<tr>
 <td><strong>Hybrid · Parallel</strong></td>
 <td>fuses several models</td>
 <td>weighted-sum or RRF</td>
@@ -157,6 +216,10 @@ tiny 5-document sample corpus ships for smoke tests.</p>
 </tr>
 </tbody>
 </table>
+<p>The <strong>multilingual</strong> model is a <em>cross-lingual</em> retriever: documents are encoded once with a
+multilingual sentence-transformer, and a query in <strong>any</strong> of ~50 languages (Arabic, French,
+Spanish, …) lands in the same embedding space, so it retrieves the (English) arguments without
+translation.</p>
 <hr />
 <h1 id="part-ii-requirements-coverage">Part II — Requirements Coverage</h1>
 <p>The codebase is organized around the project brief's nine graded requirements:</p>
@@ -171,7 +234,7 @@ tiny 5-document sample corpus ships for smoke tests.</p>
 <tbody>
 <tr>
 <td>2</td>
-<td><strong>Representations:</strong> VSM TF-IDF, BM25, embeddings (BERT <strong>and</strong> Word2Vec), hybrid (serial <strong>and</strong> parallel with fusion)</td>
+<td><strong>Representations:</strong> VSM TF-IDF, BM25, embeddings (BERT, Word2Vec <strong>and</strong> a cross-lingual multilingual model), hybrid (serial <strong>and</strong> parallel with fusion)</td>
 <td><code>ir_core/representation/</code></td>
 </tr>
 <tr>
@@ -259,8 +322,9 @@ identical operations.</p>
    used to build the index, producing a <code>QueryContext</code> of raw text + tokens.</li>
 <li>The engine dispatches to the requested model:
    - <strong>TF-IDF / BM25</strong> score by streaming the matching terms' postings from SQLite.
-   - <strong>BERT / Word2Vec</strong> encode the query and run a cosine search over the in-memory (inflated)
-     vector matrix.
+   - <strong>BERT / Word2Vec / Multilingual</strong> encode the query and run a cosine search over the in-memory
+     (inflated) vector matrix. The <strong>multilingual</strong> model shares one cross-lingual embedding space,
+     so a query in Arabic/French/Spanish/… retrieves the (English) documents without translation.
    - <strong>Hybrids</strong> either fuse several models' rankings (parallel) or retrieve-then-rerank (serial).</li>
 <li>Result <code>doc_id</code>s are joined back to their <strong>full original text</strong> (decompressed from the
    SQLite BLOB) and returned as ranked <code>SearchResult</code>s.</li>
@@ -291,7 +355,9 @@ identical operations.</p>
   query/            #   processing + refinement
   eval/             #   metrics + runner
   engine.py         #   orchestrator (Facade) used by services &amp; UI
-services/           # SOA: preprocessing/indexing/retrieval/ranking-eval/refinement + gateway
+services/           # SOA backend — one package per service, each with app.py · router.py · service.py:
+                    #   gateway/ · preprocessing/ · indexing/ · retrieval/ · evaluation/ · query_refinement/
+                    #   plus common.py (app factory + HTTP client) and run_all.py (launcher)
 ui/app.py           # Streamlit UI
 scripts/            # build_indexes.py, evaluate.py, run_full_eval.py, smoke_test.py
 docs/               # ARCHITECTURE.md, REPORT.md, CODE_REFERENCE.md
@@ -309,7 +375,7 @@ contains, grouped by layer.</p>
 <p>This file contains no functions or classes. It only sets the module docstring (describing the library as a modular IR engine with multiple document representations, disk-backed indexing, query processing/refinement, ranking and evaluation) and defines a single module-level constant <code>__version__ = "1.0.0"</code>.</p>
 <h2 id="ir_coreconfigpy"><code>ir_core/config.py</code></h2>
 <p><strong>Purpose:</strong> Central configuration hub: the dataset registry, on-disk index paths, microservice endpoint URLs, and default model/retrieval hyper-parameters, so no path or dataset id is hard-coded elsewhere.</p>
-<p>Module-level constants: <code>PROJECT_ROOT</code> (the repo root, computed from this file's location), <code>INDEX_ROOT</code> (root directory for all persisted indexes, overridable via the <code>IR_INDEX_ROOT</code> env var), <code>DATASETS</code> (a dict mapping dataset keys to <code>DatasetSpec</code> objects, currently just <code>"argsme"</code>), <code>SAMPLE</code> (a tiny 5-doc <code>DatasetSpec</code> for smoke tests), <code>BERT_MODEL_NAME</code> (sentence-transformers model name, overridable via <code>IR_BERT_MODEL</code>), <code>DEFAULT_TOP_K = 10</code>, and <code>SERVICE_URLS</code> (a dict of microservice host:port URLs, each overridable via env var).</p>
+<p>Module-level constants: <code>PROJECT_ROOT</code> (the repo root, computed from this file's location), <code>INDEX_ROOT</code> (root directory for all persisted indexes, overridable via the <code>IR_INDEX_ROOT</code> env var), <code>DATASETS</code> (a dict mapping dataset keys to <code>DatasetSpec</code> objects, currently just <code>"argsme"</code>), <code>SAMPLE</code> (a tiny 5-doc <code>DatasetSpec</code> for smoke tests), <code>BERT_MODEL_NAME</code> (sentence-transformers model name, overridable via <code>IR_BERT_MODEL</code>), <code>MULTILINGUAL_MODEL_NAME</code> (the cross-lingual sentence encoder <code>paraphrase-multilingual-MiniLM-L12-v2</code>, ~50 languages, overridable via <code>IR_MULTILINGUAL_MODEL</code>), <code>DEFAULT_TOP_K = 10</code>, and <code>SERVICE_URLS</code> (a dict of microservice host:port URLs, each overridable via env var).</p>
 <h3 id="class-datasetspec">class <code>DatasetSpec</code></h3>
 <p>A frozen dataclass describing one corpus: where its preprocessed docs live and how to fetch its evaluation queries/qrels from <code>ir_datasets</code>. Fields: <code>key: str</code> (short id used in URLs/CLI/UI), <code>name: str</code> (human-friendly name), <code>processed_json: str</code> (path to the preprocessed docs JSON array), <code>ir_datasets_id: str</code> (id understood by <code>ir_datasets</code> for queries + qrels), and <code>query_text_attrs: tuple</code> (attribute names to try in order when extracting query text, default <code>("text", "title", "description", "query")</code>).</p>
 <h4 id="index_dirself-str"><code>index_dir(self) -&gt; str</code></h4>
@@ -509,11 +575,11 @@ contains, grouped by layer.</p>
 <h4 id="searchself-query_tokens-liststr-top_k-int-10-k1-optionalfloat-none-b-optionalfloat-none-candidate_filter-optionalsetint-none-listsearchresult"><code>search(self, query_tokens: list[str], top_k: int = 10, k1: Optional[float] = None, b: Optional[float] = None, candidate_filter: Optional[set[int]] = None) -&gt; list[SearchResult]</code></h4>
 <p>Scores with the BM25 Okapi formula. Resolves effective <code>k1</code>/<code>b</code> (per-query overrides else defaults), reads <code>N</code>/<code>avgdl</code>, then for each unique query term with <code>df &gt; 0</code> computes its IDF and iterates postings, adding <code>idf * (tf*(k1+1)) / (tf + k1*(1 - b + b*(length/avgdl)))</code>. An optional <code>candidate_filter</code> restricts to given rowids. Sorts descending, truncates to <code>top_k</code>, decorates with display metadata.</p>
 <h2 id="ir_corerepresentationembeddingspy"><code>ir_core/representation/embeddings.py</code></h2>
-<p><strong>Purpose:</strong> The two embedding representations (requirement #2, model 2): a BERT sentence-transformer encoder and the PyTorch Word2Vec encoder, plus build functions that stream the corpus into a <code>VectorStore</code>, and the shared <code>EmbeddingRetriever</code> that encodes a query and runs cosine search.</p>
+<p><strong>Purpose:</strong> The embedding representations (requirement #2, model 2): a BERT sentence-transformer encoder, the PyTorch Word2Vec encoder, and the <strong>multilingual</strong> cross-lingual encoder (the same <code>BertEncoder</code> class loaded with a multilingual checkpoint), plus build functions that stream the corpus into a <code>VectorStore</code>, and the shared <code>EmbeddingRetriever</code> that encodes a query and runs cosine search.</p>
 <h3 id="class-bertencoder">class <code>BertEncoder</code></h3>
-<p>Lazy wrapper around a sentence-transformers model (<code>name = "bert"</code>).</p>
+<p>Lazy wrapper around a sentence-transformers model. Used for both the <code>bert</code> representation (default checkpoint) and the <code>multilingual</code> representation (constructed with <code>MULTILINGUAL_MODEL_NAME</code>) — only the checkpoint differs, the encode path is identical.</p>
 <h4 id="__init__self-model_name-str-bert_model_name"><code>__init__(self, model_name: str = BERT_MODEL_NAME)</code></h4>
-<p>Stores the model name and defers loading (<code>_model = None</code>).</p>
+<p>Stores the model name and defers loading (<code>_model = None</code>). Passing <code>MULTILINGUAL_MODEL_NAME</code> here is exactly what makes the cross-lingual index.</p>
 <h4 id="modelself-property"><code>model(self)</code> (property)</h4>
 <p>Lazily imports <code>sentence_transformers</code> and instantiates the model on first use, caching it.</p>
 <h4 id="dimself-int-property"><code>dim(self) -&gt; int</code> (property)</h4>
@@ -530,8 +596,12 @@ contains, grouped by layer.</p>
 <p>Returns the model's vector dimensionality.</p>
 <h4 id="encode_queryself-text-str-npndarray_1"><code>encode_query(self, text: str) -&gt; np.ndarray</code></h4>
 <p>Preprocesses the raw query with the shared <code>process</code> tokenizer and returns the mean of its in-vocabulary word vectors, matching how documents were embedded.</p>
+<h3 id="def-build_dense_indexspec-datasetspec-model_name-str-encoder-limit-optionalint-none-batch_size-int-256-log_every-int-2560-dict"><code>def build_dense_index(spec: DatasetSpec, model_name: str, encoder, limit: Optional[int] = None, batch_size: int = 256, log_every: int = 2560) -&gt; dict</code></h3>
+<p>The shared text-embedding build path used by <strong>both</strong> BERT and the multilingual model (only the <code>encoder</code> differs). Streams the corpus through a <code>VectorStoreWriter</code>: batches doc-ids and text (falling back to joined tokens when raw text is missing), encodes each full batch, writes the (L2-normalized at write time) vectors, flushes a trailing partial batch. Returns a <code>{"model", "n", "dim"}</code> summary dict.</p>
 <h3 id="def-build_bert_indexspec-datasetspec-limit-optionalint-none-batch_size-int-256-log_every-int-2560-dict"><code>def build_bert_index(spec: DatasetSpec, limit: Optional[int] = None, batch_size: int = 256, log_every: int = 2560) -&gt; dict</code></h3>
-<p>Builds the BERT vector store by streaming the corpus through a <code>VectorStoreWriter</code>: batches doc-ids and text (falling back to joined tokens when raw text is missing), encodes each full batch, writes the (L2-normalized at write time) vectors, flushes a trailing partial batch. Returns a summary dict.</p>
+<p>Thin wrapper calling <code>build_dense_index(spec, "bert", BertEncoder(), …)</code> — builds the BERT vector store.</p>
+<h3 id="def-build_multilingual_indexspec-datasetspec-limit-optionalint-none-batch_size-int-128-log_every-int-2560-dict"><code>def build_multilingual_index(spec: DatasetSpec, limit: Optional[int] = None, batch_size: int = 128, log_every: int = 2560) -&gt; dict</code></h3>
+<p>Builds the <strong>cross-lingual</strong> vector store: calls <code>build_dense_index(spec, "multilingual", BertEncoder(MULTILINGUAL_MODEL_NAME), …)</code> so documents are encoded with the multilingual sentence model. Because queries are later encoded with the same model, a query in any supported language lands in the same space and retrieves the English documents.</p>
 <h3 id="def-build_word2vec_indexspec-datasetspec-model-word2vecmodel-limit-optionalint-none-batch_size-int-4096-log_every-int-20000-dict"><code>def build_word2vec_index(spec: DatasetSpec, model: Word2VecModel, limit: Optional[int] = None, batch_size: int = 4096, log_every: int = 20000) -&gt; dict</code></h3>
 <p>Builds the Word2Vec document vector store: computes each doc's mean-of-token-vectors embedding, <code>np.vstack</code>s each batch, streams through a <code>VectorStoreWriter</code>, flushes the trailing batch. Returns a summary dict.</p>
 <h3 id="class-embeddingretriever">class <code>EmbeddingRetriever</code></h3>
@@ -580,14 +650,14 @@ contains, grouped by layer.</p>
 <p>The retrieve-then-rerank cascade. Stage 1 (cheap, high-recall) retrieves <code>candidate_k</code> candidates (returns <code>[]</code> if none); stage 2 (expensive, semantic) re-scores only those doc-ids via <code>rescore</code>. Both score sets are min-max normalized, and each doc's final score is the stage-2 normalized score plus a tiny <code>1e-3 *</code> stage-1 tiebreak (so docs stage 2 cannot score keep stage-1 order). Ranks by stage-2 score, truncates to <code>top_k</code>, records both stages in <code>components</code>.</p>
 <h2 id="ir_coreenginepy"><code>ir_core/engine.py</code></h2>
 <p><strong>Purpose:</strong> The single retrieval entry point used by the microservices and the Streamlit UI; it lazily loads whichever indexes a dataset has, applies optional query refinement, and dispatches to the requested representation including the two hybrids.</p>
-<p>Module constants: <code>SINGLE_MODELS = ["tfidf", "bm25", "bert", "word2vec"]</code>, <code>HYBRID_MODELS = ["hybrid_parallel", "hybrid_serial"]</code>, <code>ALL_MODELS</code> their concatenation; and <code>ENGINE = Engine()</code>, a process-wide singleton.</p>
+<p>Module constants: <code>SINGLE_MODELS = ["tfidf", "bm25", "bert", "word2vec", "multilingual"]</code>, <code>HYBRID_MODELS = ["hybrid_parallel", "hybrid_serial"]</code>, <code>ALL_MODELS</code> their concatenation; and <code>ENGINE = Engine()</code>, a process-wide singleton.</p>
 <h3 id="class-_datasetbundle">class <code>_DatasetBundle</code></h3>
 <p>A dataclass bundling one dataset's loaded resources: <code>spec</code>, <code>index</code> (<code>InvertedIndex</code>), <code>retrievers</code> (name → retriever, only those available), <code>refiner</code> (<code>QueryRefiner</code>).</p>
 <h3 id="class-engine">class <code>Engine</code></h3>
 <h4 id="__init__self"><code>__init__(self)</code></h4>
 <p>Initializes an empty <code>_bundles</code> cache so each dataset's indexes load once and are reused.</p>
 <h4 id="_bundleself-dataset_key-str-_datasetbundle"><code>_bundle(self, dataset_key: str) -&gt; _DatasetBundle</code></h4>
-<p>Lazily loads/caches a dataset's resources. Resolves the spec, opens the <code>InvertedIndex</code> (raising <code>FileNotFoundError</code> with a build hint if absent), always wires up <code>tfidf</code> and <code>bm25</code>, adds a BERT <code>DenseRetriever</code> only if its <code>VectorStore</code> exists, and Word2Vec only if both its <code>VectorStore</code> and <code>Word2VecModel</code> artifacts exist. Builds a <code>QueryRefiner</code>, caches the bundle, returns it.</p>
+<p>Lazily loads/caches a dataset's resources. Resolves the spec, opens the <code>InvertedIndex</code> (raising <code>FileNotFoundError</code> with a build hint if absent), always wires up <code>tfidf</code> and <code>bm25</code>, adds a BERT <code>DenseRetriever</code> only if its <code>VectorStore</code> exists, Word2Vec only if both its <code>VectorStore</code> and <code>Word2VecModel</code> artifacts exist, and the cross-lingual <code>multilingual</code> <code>DenseRetriever</code> (a <code>BertEncoder(MULTILINGUAL_MODEL_NAME)</code>) only if its <code>VectorStore</code> exists. Builds a <code>QueryRefiner</code>, caches the bundle, returns it.</p>
 <h4 id="available_modelsself-dataset_key-str-liststr"><code>available_models(self, dataset_key: str) -&gt; list[str]</code></h4>
 <p>Returns usable model ids: the single models present, plus the two hybrids when at least two base retrievers are available.</p>
 <h4 id="refineself-dataset_key-str-query-str-do_spelltrue-do_expandtrue-use_historytrue-history-optionalliststr-none-refinementresult"><code>refine(self, dataset_key: str, query: str, *, do_spell=True, do_expand=True, use_history=True, history: Optional[list[str]] = None) -&gt; RefinementResult</code></h4>
@@ -631,9 +701,9 @@ contains, grouped by layer.</p>
 <h2 id="scriptsbuild_indexespy"><code>scripts/build_indexes.py</code></h2>
 <p><strong>Purpose:</strong> CLI that builds every representation/index (inverted, word2vec, bert) for a dataset (requirement #3 plus the index side of #2), streaming the preprocessed corpus so it works on full multi-GB files without loading them into RAM. Inserts the project root onto <code>sys.path</code> so <code>ir_core</code> resolves when run as a script.</p>
 <h3 id="def-builddataset_key-str-models-liststr-limit-w2v_params-word2vecparams-bert_batch-int-w2v_train_limitnone"><code>def build(dataset_key: str, models: list[str], limit, w2v_params: Word2VecParams, bert_batch: int, w2v_train_limit=None)</code></h3>
-<p>Builds the requested indexes. Resolves the spec, normalizes a falsy <code>limit</code> to <code>None</code> (ALL), defaults <code>w2v_train_limit</code> to <code>limit</code> (so Word2Vec can train on a cheap sample yet embed the full corpus). Builds the inverted index if requested; trains and saves Word2Vec then builds its embedding index; builds the BERT index with <code>bert_batch</code>. Each step is timed and logged.</p>
+<p>Builds the requested indexes. Resolves the spec, normalizes a falsy <code>limit</code> to <code>None</code> (ALL), defaults <code>w2v_train_limit</code> to <code>limit</code> (so Word2Vec can train on a cheap sample yet embed the full corpus). Builds the inverted index if requested; trains and saves Word2Vec then builds its embedding index; builds the BERT index with <code>bert_batch</code>; and builds the cross-lingual <strong>multilingual</strong> index (<code>emb.build_multilingual_index</code>) when <code>"multilingual"</code> is in the model list. Each step is timed and logged.</p>
 <h3 id="def-main"><code>def main()</code></h3>
-<p>Argparse entry point. Defines the flags, parses them, splits <code>--models</code>, constructs <code>Word2VecParams</code>, converts a <code>--w2v-train-limit</code> of 0 to None, and calls <code>build(...)</code>. Arguments: <code>--dataset</code> (required: <code>argsme | argsme_sample</code>); <code>--models</code> (default <code>"inverted,word2vec,bert"</code>); <code>--limit</code> (int, default 50000; 0 = ALL); <code>--w2v-train-limit</code> (int, default None); <code>--w2v-dim</code> (100), <code>--w2v-epochs</code> (3), <code>--w2v-min-count</code> (2); <code>--bert-batch</code> (256). <code>__main__</code> calls <code>main()</code>.</p>
+<p>Argparse entry point. Defines the flags, parses them, splits <code>--models</code>, constructs <code>Word2VecParams</code>, converts a <code>--w2v-train-limit</code> of 0 to None, and calls <code>build(...)</code>. Arguments: <code>--dataset</code> (required: <code>argsme | argsme_sample</code>); <code>--models</code> (default <code>"inverted,word2vec,bert"</code>; also accepts <code>multilingual</code>); <code>--limit</code> (int, default 50000; 0 = ALL); <code>--w2v-train-limit</code> (int, default None); <code>--w2v-dim</code> (100), <code>--w2v-epochs</code> (3), <code>--w2v-min-count</code> (2); <code>--bert-batch</code> (256). <code>__main__</code> calls <code>main()</code>.</p>
 <h2 id="scriptsevaluatepy"><code>scripts/evaluate.py</code></h2>
 <p><strong>Purpose:</strong> CLI front-end for single-model evaluation (requirement #8) that prints MAP/Recall/P@10/nDCG@10 as JSON, optionally comparing the basic pipeline against the refined one. Inserts the project root onto <code>sys.path</code>.</p>
 <h3 id="def-main_1"><code>def main()</code></h3>
@@ -660,6 +730,35 @@ owning service using the stdlib <code>post_json</code>/<code>get_json</code> cli
 <code>/search_refined</code> (calls Refinement then feeds the refined query into Retrieval). <code>run_all.py</code>
 launches all six as separate <code>uvicorn</code> subprocesses (services first, gateway last, staggered by
 1s) and terminates them all on Ctrl-C/SIGINT.</p>
+<p><strong>Package layout (one folder per service).</strong> Each service is a Python package under <code>services/</code>
+with the same three-file split, so HTTP wiring, business logic, and the ASGI app stay separated and
+the structure reads identically across services:</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>service.py</code></td>
+<td>Pure business logic, framework-free — calls into <code>ir_core</code> (or, for the gateway, forwards to downstream services). Independently importable/testable.</td>
+</tr>
+<tr>
+<td><code>router.py</code></td>
+<td>The HTTP layer: an <code>APIRouter</code> plus the pydantic request schemas; each handler unpacks the request and calls <code>service</code>.</td>
+</tr>
+<tr>
+<td><code>app.py</code></td>
+<td>The ASGI entry point uvicorn loads: <code>make_app(...)</code> (adds <code>/health</code>) then <code>include_router(router)</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>The packages are <code>gateway/</code>, <code>preprocessing/</code>, <code>indexing/</code>, <code>retrieval/</code>, <code>evaluation/</code> (ranking &amp;
+evaluation), and <code>query_refinement/</code>; <code>common.py</code> (app factory + HTTP client) and <code>run_all.py</code>
+(launcher) stay at the <code>services/</code> root. Run a single service with e.g.
+<code>uvicorn services.retrieval.app:app --port 8003</code>.</p>
 <h2 id="servicescommonpy"><code>services/common.py</code></h2>
 <p><strong>Purpose:</strong> Shared helpers for the microservices: a FastAPI app factory (with a built-in health route) and a tiny stdlib <code>urllib</code>-based HTTP client used by the gateway to call downstream services over REST, keeping services loosely coupled with no extra dependency.</p>
 <h3 id="def-make_apptitle-str-fastapi"><code>def make_app(title: str) -&gt; FastAPI</code></h3>
@@ -668,8 +767,8 @@ launches all six as separate <code>uvicorn</code> subprocesses (services first, 
 <p>Sends a JSON POST to <code>url</code>. JSON-encodes <code>payload</code> to UTF-8, builds a POST <code>Request</code> with <code>Content-Type: application/json</code>, opens it with the given timeout (default 600s for heavy retrieval/eval calls), and returns the decoded JSON response. The gateway's primary forwarding mechanism.</p>
 <h3 id="def-get_jsonurl-str-timeout-float-600-any"><code>def get_json(url: str, timeout: float = 60.0) -&gt; Any</code></h3>
 <p>Sends a GET to <code>url</code> (default 60s) and returns the parsed JSON. Used for health/discovery and read-only lookups (datasets, status, models).</p>
-<h2 id="servicesgatewaypy"><code>services/gateway.py</code></h2>
-<p><strong>Purpose:</strong> The API Gateway (port 8000) — the single public entry point implementing the Gateway/Facade pattern. It routes each call to the responsible downstream service over REST and composes multiple services when needed, so clients (including the UI) only talk to the gateway. Run with <code>uvicorn services.gateway:app --port 8000</code>. Globals: <code>app = make_app("api-gateway")</code>, <code>S = SERVICE_URLS</code>.</p>
+<h2 id="servicesgateway"><code>services/gateway/</code></h2>
+<p><strong>Purpose:</strong> The API Gateway (port 8000) — the single public entry point implementing the Gateway/Facade pattern. It routes each call to the responsible downstream service over REST and composes multiple services when needed, so clients (including the UI) only talk to the gateway. Run with <code>uvicorn services.gateway.app:app --port 8000</code>. Split across the package: <code>service.py</code> holds the forwarding/composition logic (<code>_safe</code>, <code>S = SERVICE_URLS</code>, the per-endpoint downstream calls), <code>router.py</code> the pydantic request models + routes, and <code>app.py</code> builds <code>make_app("api-gateway")</code> and mounts the router.</p>
 <h3 id="def-_safefn-a-kw"><code>def _safe(fn, *a, **kw)</code></h3>
 <p>Invokes <code>fn(*a, **kw)</code> and, on any exception, re-raises it as <code>HTTPException(status_code=502, detail="downstream error: …")</code> — a clean 502 instead of an uncaught 500.</p>
 <h3 id="get-services-handler-services_health"><code>GET /services</code> (handler <code>services_health()</code>)</h3>
@@ -698,14 +797,14 @@ launches all six as separate <code>uvicorn</code> subprocesses (services first, 
 <p>Forwards to <code>POST {ranking_eval}/compare</code>; returns before/after-refinement metrics.</p>
 <h3 id="post-search_refined-handler-search_refinedreq-searchrequest"><code>POST /search_refined</code> (handler <code>search_refined(req: SearchRequest)</code>)</h3>
 <p>The composition endpoint orchestrating two services. It first calls <code>POST {refinement}/refine</code> with a refine payload, then copies the original request, replaces its <code>query</code> with <code>refinement.get("refined_raw") or req.query</code>, and calls <code>POST {retrieval}/search</code>. Attaches the refinement result under <code>result["refinement"]</code> and returns the combined object.</p>
-<h2 id="servicespreprocessing_servicepy"><code>services/preprocessing_service.py</code></h2>
-<p><strong>Purpose:</strong> Preprocessing Service (port 8001). Single responsibility: turn raw text into normalized tokens using the <em>same</em> pipeline applied to the corpus (requirement #4). Global: <code>app = make_app("preprocessing-service")</code>.</p>
+<h2 id="servicespreprocessing"><code>services/preprocessing/</code></h2>
+<p><strong>Purpose:</strong> Preprocessing Service (port 8001). Single responsibility: turn raw text into normalized tokens using the <em>same</em> pipeline applied to the corpus (requirement #4). Package split: <code>service.py</code> (<code>process_text(...)</code> calling <code>ir_core.text.preprocessing.process</code>), <code>router.py</code> (<code>ProcessRequest</code> + <code>POST /process</code>), <code>app.py</code> (<code>make_app("preprocessing-service")</code> + router). Run: <code>uvicorn services.preprocessing.app:app --port 8001</code>.</p>
 <h3 id="class-processrequestbasemodel"><code>class ProcessRequest(BaseModel)</code></h3>
 <p>Fields: <code>text: str</code>; <code>do_stemming: bool = True</code>; <code>do_lemmatize: bool = False</code>; <code>remove_stopwords: bool = True</code>.</p>
 <h3 id="post-process-handler-process_textreq-processrequest"><code>POST /process</code> (handler <code>process_text(req: ProcessRequest)</code>)</h3>
 <p>Calls <code>ir_core.text.preprocessing.process(...)</code> with the request flags and returns <code>{"text", "tokens", "num_tokens"}</code>.</p>
-<h2 id="servicesindexing_servicepy"><code>services/indexing_service.py</code></h2>
-<p><strong>Purpose:</strong> Indexing Service (port 8002). Owns the inverted index and vector stores: reports build status, exposes term/vocabulary lookups, and can trigger a (capped) build. Full-corpus builds are normally done offline via <code>scripts/build_indexes.py</code>. Global: <code>app = make_app("indexing-service")</code>.</p>
+<h2 id="servicesindexing"><code>services/indexing/</code></h2>
+<p><strong>Purpose:</strong> Indexing Service (port 8002). Owns the inverted index and vector stores: reports build status, exposes term/vocabulary lookups, and can trigger a (capped) build. Full-corpus builds are normally done offline via <code>scripts/build_indexes.py</code>. Package split: <code>service.py</code> (<code>datasets</code>/<code>status</code>/<code>vocab</code>/<code>build</code> logic over <code>ir_core</code>), <code>router.py</code> (<code>BuildRequest</code> + the routes below), <code>app.py</code> (<code>make_app("indexing-service")</code> + router). Run: <code>uvicorn services.indexing.app:app --port 8002</code>.</p>
 <h3 id="get-datasets-handler-datasets_1"><code>GET /datasets</code> (handler <code>datasets()</code>)</h3>
 <p>Returns <code>{"datasets": list_datasets()}</code>.</p>
 <h3 id="get-statusdataset_key-handler-statusdataset_key-str_1"><code>GET /status/{dataset_key}</code> (handler <code>status(dataset_key: str)</code>)</h3>
@@ -716,24 +815,24 @@ launches all six as separate <code>uvicorn</code> subprocesses (services first, 
 <p>Fields: <code>dataset_key: str</code>; <code>limit: Optional[int] = 5000</code>.</p>
 <h3 id="post-build-handler-buildreq-buildrequest"><code>POST /build</code> (handler <code>build(req: BuildRequest)</code>)</h3>
 <p>Resolves the spec, calls <code>InvertedIndex(spec).build(limit=req.limit)</code>, returns <code>{"dataset", "built": True, **meta}</code>.</p>
-<h2 id="servicesretrieval_servicepy"><code>services/retrieval_service.py</code></h2>
-<p><strong>Purpose:</strong> Retrieval Service (port 8003). Owns query matching &amp; ranking (requirement #6): given a dataset, model and query it returns ranked documents, delegating to the shared <code>ENGINE</code>. BM25 <code>k1</code>/<code>b</code> are accepted per request, and hybrid options pass through. Global: <code>app = make_app("retrieval-service")</code>.</p>
+<h2 id="servicesretrieval"><code>services/retrieval/</code></h2>
+<p><strong>Purpose:</strong> Retrieval Service (port 8003). Owns query matching &amp; ranking (requirement #6): given a dataset, model and query it returns ranked documents, delegating to the shared <code>ENGINE</code>. BM25 <code>k1</code>/<code>b</code> are accepted per request, and hybrid options pass through. Package split: <code>service.py</code> (<code>models</code>/<code>search</code> over <code>ENGINE</code>), <code>router.py</code> (<code>SearchRequest</code> + routes), <code>app.py</code> (<code>make_app("retrieval-service")</code> + router). Run: <code>uvicorn services.retrieval.app:app --port 8003</code>.</p>
 <h3 id="class-searchrequestbasemodel"><code>class SearchRequest(BaseModel)</code></h3>
 <p>Same shape as the gateway's <code>SearchRequest</code> (<code>dataset</code>, <code>model="bm25"</code>, <code>query</code>, <code>top_k=10</code>, <code>bm25_k1</code>, <code>bm25_b</code>, <code>refine_opts</code>, <code>history</code>, <code>hybrid_opts</code>).</p>
 <h3 id="get-modelsdataset_key-handler-modelsdataset_key-str_1"><code>GET /models/{dataset_key}</code> (handler <code>models(dataset_key: str)</code>)</h3>
 <p>Returns <code>{"dataset": dataset_key, "models": ENGINE.available_models(dataset_key)}</code>.</p>
 <h3 id="post-search-handler-searchreq-searchrequest_1"><code>POST /search</code> (handler <code>search(req: SearchRequest)</code>)</h3>
 <p>Delegates to <code>ENGINE.search(...)</code> with all request fields and returns the ranked list.</p>
-<h2 id="servicesranking_eval_servicepy"><code>services/ranking_eval_service.py</code></h2>
-<p><strong>Purpose:</strong> Ranking &amp; Evaluation Service (port 8004). Owns offline effectiveness measurement (requirement #8): MAP, Recall, P@10, nDCG@10 over a dataset's qrels, plus a before/after-refinement comparison. Global: <code>app = make_app("ranking-eval-service")</code>.</p>
+<h2 id="servicesevaluation"><code>services/evaluation/</code></h2>
+<p><strong>Purpose:</strong> Ranking &amp; Evaluation Service (port 8004). Owns offline effectiveness measurement (requirement #8): MAP, Recall, P@10, nDCG@10 over a dataset's qrels, plus a before/after-refinement comparison. Package split: <code>service.py</code> (<code>evaluate</code>/<code>compare</code> over <code>ir_core.eval.evaluate</code>), <code>router.py</code> (<code>EvalRequest</code> + routes), <code>app.py</code> (<code>make_app("ranking-eval-service")</code> + router). Run: <code>uvicorn services.evaluation.app:app --port 8004</code>.</p>
 <h3 id="class-evalrequestbasemodel"><code>class EvalRequest(BaseModel)</code></h3>
 <p>Fields: <code>dataset</code>; <code>model="bm25"</code>; <code>num_queries: Optional[int] = 50</code>; <code>eval_depth: int = 100</code>; <code>bm25_k1</code>; <code>bm25_b</code>; <code>refine_opts</code>; <code>hybrid_opts</code>.</p>
 <h3 id="post-evaluate-handler-evaluatereq-evalrequest_1"><code>POST /evaluate</code> (handler <code>evaluate(req: EvalRequest)</code>)</h3>
 <p>Calls <code>evaluate_model(...)</code> with the request fields and returns the metric dict.</p>
 <h3 id="post-compare-handler-comparereq-evalrequest_1"><code>POST /compare</code> (handler <code>compare(req: EvalRequest)</code>)</h3>
 <p>Calls <code>compare_refinement(...)</code> to evaluate the model with refinement OFF then ON (note: <code>refine_opts</code> is not forwarded here) and returns the comparison.</p>
-<h2 id="servicesquery_refinement_servicepy"><code>services/query_refinement_service.py</code></h2>
-<p><strong>Purpose:</strong> Query Refinement Service (port 8005). Owns requirement #5: spelling correction, WordNet synonym expansion, query suggestion, and history-based personalization, delegating to <code>ENGINE</code>. Global: <code>app = make_app("query-refinement-service")</code>.</p>
+<h2 id="servicesquery_refinement"><code>services/query_refinement/</code></h2>
+<p><strong>Purpose:</strong> Query Refinement Service (port 8005). Owns requirement #5: spelling correction, WordNet synonym expansion, query suggestion, and history-based personalization, delegating to <code>ENGINE</code>. Package split: <code>service.py</code> (<code>refine</code>/<code>suggest</code> over <code>ENGINE</code>), <code>router.py</code> (<code>RefineRequest</code>/<code>SuggestRequest</code> + routes), <code>app.py</code> (<code>make_app("query-refinement-service")</code> + router). Run: <code>uvicorn services.query_refinement.app:app --port 8005</code>.</p>
 <h3 id="class-refinerequestbasemodel"><code>class RefineRequest(BaseModel)</code></h3>
 <p>Fields: <code>dataset</code>; <code>query</code>; <code>spell=True</code>; <code>expand=True</code>; <code>history_personalize=True</code>; <code>history: Optional[list[str]] = None</code>.</p>
 <h3 id="class-suggestrequestbasemodel"><code>class SuggestRequest(BaseModel)</code></h3>
@@ -743,7 +842,7 @@ launches all six as separate <code>uvicorn</code> subprocesses (services first, 
 <h3 id="post-suggest-handler-suggestreq-suggestrequest"><code>POST /suggest</code> (handler <code>suggest(req: SuggestRequest)</code>)</h3>
 <p>Returns <code>{"query": req.query, "suggestions": ENGINE.suggest(...)}</code>.</p>
 <h2 id="servicesrun_allpy"><code>services/run_all.py</code></h2>
-<p><strong>Purpose:</strong> Dev launcher that starts every microservice plus the gateway, each as its own uvicorn subprocess, so the whole SOA backend comes up with <code>python -m services.run_all</code> (Ctrl-C to stop). <code>SERVICES</code> is an ordered list of <code>(target, port)</code> tuples (services on 8001-8005, gateway last on 8000).</p>
+<p><strong>Purpose:</strong> Dev launcher that starts every microservice plus the gateway, each as its own uvicorn subprocess, so the whole SOA backend comes up with <code>python -m services.run_all</code> (Ctrl-C to stop). <code>SERVICES</code> is an ordered list of <code>(target, port)</code> tuples pointing at each package's ASGI app (<code>services.preprocessing.app:app</code> 8001, <code>services.indexing.app:app</code> 8002, <code>services.retrieval.app:app</code> 8003, <code>services.evaluation.app:app</code> 8004, <code>services.query_refinement.app:app</code> 8005, and <code>services.gateway.app:app</code> last on 8000).</p>
 <h3 id="def-main_4"><code>def main()</code></h3>
 <p>Iterates <code>SERVICES</code>, launching each via <code>subprocess.Popen([sys.executable, "-m", "uvicorn", target, "--host", "127.0.0.1", "--port", str(port), "--log-level", "warning"])</code>, collecting handles, printing each URL, sleeping 1.0s between launches (staggered startup). Prints the gateway URL, defines a nested <code>shutdown(*_)</code> that terminates all children and exits, registers it on <code>SIGINT</code>, and <code>wait()</code>s on each process (with a <code>KeyboardInterrupt</code> fallback).</p>
 <h4 id="nested-shutdown_">nested <code>shutdown(*_)</code></h4>
@@ -789,7 +888,7 @@ launches all six as separate <code>uvicorn</code> subprocesses (services first, 
 <ul>
 <li><strong><code>sys.path</code> insertion:</strong> prepends the project root so <code>ir_core</code>/<code>services</code> import when Streamlit runs the file directly.</li>
 <li><strong><code>st.set_page_config(...)</code>:</strong> title <code>"IR System"</code>, icon <code>🔎</code>, <code>layout="wide"</code>, called once at import.</li>
-<li><strong><code>MODEL_LABELS</code> (dict):</strong> internal model keys → human-readable selectbox labels. Used as the model picker's <code>format_func</code>, in the header caption, spinners, and Help tab.</li>
+<li><strong><code>MODEL_LABELS</code> (dict):</strong> internal model keys → human-readable selectbox labels (including the cross-lingual <code>multilingual</code> option, labelled "Embedding · Multilingual 🌐 (cross-lingual)"). Used as the model picker's <code>format_func</code>, in the header caption, spinners, and Help tab.</li>
 <li><strong><code>MODEL_HELP</code> (dict):</strong> model keys → one-line descriptions, shown under the model selectbox and in Help.</li>
 <li><strong><code>EXAMPLES</code> (dict):</strong> curated clickable example queries per dataset key. Rendered as buttons in Search and listed in Help.</li>
 <li><strong><code>CSS</code> (str):</strong> an inline <code>&lt;style&gt;</code> block styling the result cards (<code>.result-card</code>, <code>.rank-badge</code>, <code>.docid</code>, <code>.score-val</code>, <code>.score-bar</code>, <code>.comp-badge</code>, <code>.snippet</code>, <code>mark</code>, <code>.pill</code>), injected once.</li>
@@ -828,6 +927,7 @@ launches all six as separate <code>uvicorn</code> subprocesses (services first, 
 <p><strong>Evaluation tab (requirement #8):</strong> controls for judged-query count and retrieval depth; an <strong>Evaluate model</strong> button (metric cards + a bar chart) and a <strong>Compare before/after refinement</strong> button (before→after metric cards with deltas + a dataframe and an explanatory caption).</p>
 <p><strong>Help tab:</strong> describes what Args.me retrieves and lists its example queries, lists every model with its description, and a Tips section.</p>
 <hr />
-<p><em>End of code reference.</em></p></main>
+<p><em>End of code reference.</em></p>
+</main>
 </div>
 </body></html>

@@ -51,10 +51,11 @@ def _edits1(word: str) -> set[str]:
 class RefinementResult:
     original: str
     corrected: str                       # raw string after spell-correction
-    refined_raw: str                     # corrected + synonym words (for BERT)
-    refined_tokens: list[str]            # corrected + expansion, stemmed (for lexical)
+    refined_raw: str                     # corrected text only (for dense/BERT)
+    refined_tokens: list[str]            # corrected + synonym expansion, stemmed (for lexical)
     corrections: dict = field(default_factory=dict)   # {wrong: right}
     expansions: list = field(default_factory=list)     # synonym words added
+    expansion_terms: list = field(default_factory=list)  # stemmed synonyms (lexical down-weighting)
     suggestions: list = field(default_factory=list)    # suggested full queries
     applied: dict = field(default_factory=dict)
 
@@ -63,6 +64,7 @@ class RefinementResult:
             "original": self.original, "corrected": self.corrected,
             "refined_raw": self.refined_raw, "refined_tokens": self.refined_tokens,
             "corrections": self.corrections, "expansions": self.expansions,
+            "expansion_terms": self.expansion_terms,
             "suggestions": self.suggestions, "applied": self.applied,
         }
 
@@ -100,24 +102,27 @@ class QueryRefiner:
         return _WORD_RE.sub(repl, query), corrections
 
     # -- synonym expansion (WordNet) -------------------------------------
-    def expand(self, query: str, max_per_word: int = 2) -> list[str]:
+    def expand(self, query: str, max_per_word: int = 1) -> list[str]:
         added: list[str] = []
         seen = set(process(query))
         for w in _WORD_RE.findall(query.lower()):
             n = 0
-            for syn in wordnet.synsets(w):
-                for lemma in syn.lemma_names():
-                    cand = lemma.replace("_", " ").lower()
-                    if " " in cand or cand == w:
-                        continue
-                    st = stem(cand)
-                    if st in seen or self.index.df(st) == 0:
-                        continue
-                    seen.add(st)
-                    added.append(cand)
-                    n += 1
-                    if n >= max_per_word:
-                        break
+            # Only the first synset = the most common sense. Iterating every
+            # synset pulls in unrelated senses (e.g. "machine" -> "political
+            # machine"), which is pure noise for retrieval.
+            synsets = wordnet.synsets(w)
+            if not synsets:
+                continue
+            for lemma in synsets[0].lemma_names():
+                cand = lemma.replace("_", " ").lower()
+                if " " in cand or cand == w:
+                    continue
+                st = stem(cand)
+                if st in seen or self.index.df(st) == 0:
+                    continue
+                seen.add(st)
+                added.append(cand)
+                n += 1
                 if n >= max_per_word:
                     break
         return added
@@ -173,18 +178,24 @@ class QueryRefiner:
     # -- one-shot refinement ---------------------------------------------
     def refine(self, query: str, *, do_spell: bool = True, do_expand: bool = True,
                use_history: bool = True, history: Optional[list[str]] = None,
-               max_per_word: int = 2) -> RefinementResult:
+               max_per_word: int = 1) -> RefinementResult:
         corrected, corrections = (self.correct(query) if do_spell else (query, {}))
         expansions = self.expand(corrected, max_per_word=max_per_word) if do_expand else []
         hist_terms = self.history_terms(history, corrected) if use_history else []
 
-        refined_raw = " ".join([corrected] + expansions)
-        refined_tokens = process(corrected) + [stem(w) for w in expansions] + hist_terms
+        # Synonyms help LEXICAL retrieval (literal term matching) but hurt DENSE
+        # embeddings: the model already maps synonyms to nearby vectors, so
+        # appending them only drags the query vector off-topic (query drift).
+        # Hence the dense path (refined_raw) is spell-correction only, while the
+        # synonym expansion is kept on the lexical tokens path.
+        expansion_terms = [stem(w) for w in expansions]
+        refined_raw = corrected
+        refined_tokens = process(corrected) + expansion_terms + hist_terms
 
         return RefinementResult(
             original=query, corrected=corrected, refined_raw=refined_raw,
             refined_tokens=refined_tokens, corrections=corrections,
-            expansions=expansions,
+            expansions=expansions, expansion_terms=expansion_terms,
             suggestions=self.suggest(query, history=history),
             applied={"spell": do_spell, "expand": do_expand, "history": use_history,
                      "history_terms": hist_terms},

@@ -31,7 +31,8 @@ class BM25:
 
     def search(self, query_tokens: list[str], top_k: int = 10,
                k1: Optional[float] = None, b: Optional[float] = None,
-               candidate_filter: Optional[set[int]] = None) -> list[SearchResult]:
+               candidate_filter: Optional[set[int]] = None,
+               term_weights: Optional[dict[str, float]] = None) -> list[SearchResult]:
         k1 = self.params.k1 if k1 is None else k1
         b = self.params.b if b is None else b
         N = self.index.num_docs
@@ -43,11 +44,12 @@ class BM25:
             if df == 0:
                 continue
             idf = self._bm25_idf(N, df)
+            mult = term_weights.get(term, 1.0) if term_weights else 1.0
             for p in self.index.postings(term):
                 if candidate_filter is not None and p.doc_rowid not in candidate_filter:
                     continue
                 denom = p.tf + k1 * (1.0 - b + b * (p.length / avgdl))
-                scores[p.doc_rowid] += idf * (p.tf * (k1 + 1.0)) / denom
+                scores[p.doc_rowid] += mult * idf * (p.tf * (k1 + 1.0)) / denom
 
         ranked = sorted(scores.items(), key=lambda x: x[1], reverse=True)[:top_k]
         meta = self.index.get_docs([r for r, _ in ranked])

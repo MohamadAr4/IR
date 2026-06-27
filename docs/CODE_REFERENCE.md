@@ -2,7 +2,7 @@
 
 **Project:** Service-Oriented IR System over the Args.me corpus (Touché 2020 Task 1)
 **Scope:** Every source file, and every function/class/method within it.
-**Generated:** 2026-06-25
+**Generated:** 2026-06-26
 
 ---
 
@@ -17,7 +17,7 @@ It retrieves over the **Args.me** debate-argument corpus (387,692 documents, Tou
 with evaluation queries and relevance judgments (qrels) pulled from the `ir_datasets` library. A
 tiny 5-document sample corpus ships for smoke tests.
 
-The system implements **six retrieval models** behind one uniform interface:
+The system implements **seven retrieval models** behind one uniform interface:
 
 | Model | Representation | Matching |
 |-------|----------------|----------|
@@ -25,8 +25,14 @@ The system implements **six retrieval models** behind one uniform interface:
 | **BM25** | probabilistic Okapi, tunable `k1`/`b` | BM25 score |
 | **BERT** | `all-MiniLM-L6-v2` sentence embeddings | cosine |
 | **Word2Vec** | PyTorch skip-gram, mean-pooled word vectors | cosine |
+| **Multilingual 🌐** | `paraphrase-multilingual-MiniLM-L12-v2` (~50 languages), shared cross-lingual space | cosine |
 | **Hybrid · Parallel** | fuses several models | weighted-sum or RRF |
 | **Hybrid · Serial** | one model retrieves, another re-ranks | stage-2 score |
+
+The **multilingual** model is a *cross-lingual* retriever: documents are encoded once with a
+multilingual sentence-transformer, and a query in **any** of ~50 languages (Arabic, French,
+Spanish, …) lands in the same embedding space, so it retrieves the (English) arguments without
+translation.
 
 ---
 
@@ -36,7 +42,7 @@ The codebase is organized around the project brief's nine graded requirements:
 
 | # | Requirement | Where it lives |
 |---|-------------|----------------|
-| 2 | **Representations:** VSM TF-IDF, BM25, embeddings (BERT **and** Word2Vec), hybrid (serial **and** parallel with fusion) | `ir_core/representation/` |
+| 2 | **Representations:** VSM TF-IDF, BM25, embeddings (BERT, Word2Vec **and** a cross-lingual multilingual model), hybrid (serial **and** parallel with fusion) | `ir_core/representation/` |
 | 3 | **Indexing:** disk-backed inverted index (SQLite), streamed build | `ir_core/index/inverted_index.py` |
 | 4 | **Query processing:** identical preprocessing for documents and queries | `ir_core/text/preprocessing.py`, `ir_core/query/processing.py` |
 | 5 | **Query refinement:** spell-correction, WordNet expansion, suggestion, history | `ir_core/query/refinement.py` |
@@ -101,8 +107,9 @@ identical operations.
    used to build the index, producing a `QueryContext` of raw text + tokens.
 5. The engine dispatches to the requested model:
    - **TF-IDF / BM25** score by streaming the matching terms' postings from SQLite.
-   - **BERT / Word2Vec** encode the query and run a cosine search over the in-memory (inflated)
-     vector matrix.
+   - **BERT / Word2Vec / Multilingual** encode the query and run a cosine search over the in-memory
+     (inflated) vector matrix. The **multilingual** model shares one cross-lingual embedding space,
+     so a query in Arabic/French/Spanish/… retrieves the (English) documents without translation.
    - **Hybrids** either fuse several models' rankings (parallel) or retrieve-then-rerank (serial).
 6. Result `doc_id`s are joined back to their **full original text** (decompressed from the
    SQLite BLOB) and returned as ranked `SearchResult`s.
@@ -138,7 +145,9 @@ ir_core/            # the IR engine (importable library)
   query/            #   processing + refinement
   eval/             #   metrics + runner
   engine.py         #   orchestrator (Facade) used by services & UI
-services/           # SOA: preprocessing/indexing/retrieval/ranking-eval/refinement + gateway
+services/           # SOA backend — one package per service, each with app.py · router.py · service.py:
+                    #   gateway/ · preprocessing/ · indexing/ · retrieval/ · evaluation/ · query_refinement/
+                    #   plus common.py (app factory + HTTP client) and run_all.py (launcher)
 ui/app.py           # Streamlit UI
 scripts/            # build_indexes.py, evaluate.py, run_full_eval.py, smoke_test.py
 docs/               # ARCHITECTURE.md, REPORT.md, CODE_REFERENCE.md
@@ -165,7 +174,7 @@ This file contains no functions or classes. It only sets the module docstring (d
 ## `ir_core/config.py`
 **Purpose:** Central configuration hub: the dataset registry, on-disk index paths, microservice endpoint URLs, and default model/retrieval hyper-parameters, so no path or dataset id is hard-coded elsewhere.
 
-Module-level constants: `PROJECT_ROOT` (the repo root, computed from this file's location), `INDEX_ROOT` (root directory for all persisted indexes, overridable via the `IR_INDEX_ROOT` env var), `DATASETS` (a dict mapping dataset keys to `DatasetSpec` objects, currently just `"argsme"`), `SAMPLE` (a tiny 5-doc `DatasetSpec` for smoke tests), `BERT_MODEL_NAME` (sentence-transformers model name, overridable via `IR_BERT_MODEL`), `DEFAULT_TOP_K = 10`, and `SERVICE_URLS` (a dict of microservice host:port URLs, each overridable via env var).
+Module-level constants: `PROJECT_ROOT` (the repo root, computed from this file's location), `INDEX_ROOT` (root directory for all persisted indexes, overridable via the `IR_INDEX_ROOT` env var), `DATASETS` (a dict mapping dataset keys to `DatasetSpec` objects, currently just `"argsme"`), `SAMPLE` (a tiny 5-doc `DatasetSpec` for smoke tests), `BERT_MODEL_NAME` (sentence-transformers model name, overridable via `IR_BERT_MODEL`), `MULTILINGUAL_MODEL_NAME` (the cross-lingual sentence encoder `paraphrase-multilingual-MiniLM-L12-v2`, ~50 languages, overridable via `IR_MULTILINGUAL_MODEL`), `DEFAULT_TOP_K = 10`, and `SERVICE_URLS` (a dict of microservice host:port URLs, each overridable via env var).
 
 ### class `DatasetSpec`
 A frozen dataclass describing one corpus: where its preprocessed docs live and how to fetch its evaluation queries/qrels from `ir_datasets`. Fields: `key: str` (short id used in URLs/CLI/UI), `name: str` (human-friendly name), `processed_json: str` (path to the preprocessed docs JSON array), `ir_datasets_id: str` (id understood by `ir_datasets` for queries + qrels), and `query_text_attrs: tuple` (attribute names to try in order when extracting query text, default `("text", "title", "description", "query")`).
@@ -469,13 +478,13 @@ Robertson/Spärck-Jones IDF `ln(1 + (N - df + 0.5)/(df + 0.5))`. The leading `1 
 Scores with the BM25 Okapi formula. Resolves effective `k1`/`b` (per-query overrides else defaults), reads `N`/`avgdl`, then for each unique query term with `df > 0` computes its IDF and iterates postings, adding `idf * (tf*(k1+1)) / (tf + k1*(1 - b + b*(length/avgdl)))`. An optional `candidate_filter` restricts to given rowids. Sorts descending, truncates to `top_k`, decorates with display metadata.
 
 ## `ir_core/representation/embeddings.py`
-**Purpose:** The two embedding representations (requirement #2, model 2): a BERT sentence-transformer encoder and the PyTorch Word2Vec encoder, plus build functions that stream the corpus into a `VectorStore`, and the shared `EmbeddingRetriever` that encodes a query and runs cosine search.
+**Purpose:** The embedding representations (requirement #2, model 2): a BERT sentence-transformer encoder, the PyTorch Word2Vec encoder, and the **multilingual** cross-lingual encoder (the same `BertEncoder` class loaded with a multilingual checkpoint), plus build functions that stream the corpus into a `VectorStore`, and the shared `EmbeddingRetriever` that encodes a query and runs cosine search.
 
 ### class `BertEncoder`
-Lazy wrapper around a sentence-transformers model (`name = "bert"`).
+Lazy wrapper around a sentence-transformers model. Used for both the `bert` representation (default checkpoint) and the `multilingual` representation (constructed with `MULTILINGUAL_MODEL_NAME`) — only the checkpoint differs, the encode path is identical.
 
 #### `__init__(self, model_name: str = BERT_MODEL_NAME)`
-Stores the model name and defers loading (`_model = None`).
+Stores the model name and defers loading (`_model = None`). Passing `MULTILINGUAL_MODEL_NAME` here is exactly what makes the cross-lingual index.
 
 #### `model(self)` (property)
 Lazily imports `sentence_transformers` and instantiates the model on first use, caching it.
@@ -501,8 +510,14 @@ Returns the model's vector dimensionality.
 #### `encode_query(self, text: str) -> np.ndarray`
 Preprocesses the raw query with the shared `process` tokenizer and returns the mean of its in-vocabulary word vectors, matching how documents were embedded.
 
+### `def build_dense_index(spec: DatasetSpec, model_name: str, encoder, limit: Optional[int] = None, batch_size: int = 256, log_every: int = 2560) -> dict`
+The shared text-embedding build path used by **both** BERT and the multilingual model (only the `encoder` differs). Streams the corpus through a `VectorStoreWriter`: batches doc-ids and text (falling back to joined tokens when raw text is missing), encodes each full batch, writes the (L2-normalized at write time) vectors, flushes a trailing partial batch. Returns a `{"model", "n", "dim"}` summary dict.
+
 ### `def build_bert_index(spec: DatasetSpec, limit: Optional[int] = None, batch_size: int = 256, log_every: int = 2560) -> dict`
-Builds the BERT vector store by streaming the corpus through a `VectorStoreWriter`: batches doc-ids and text (falling back to joined tokens when raw text is missing), encodes each full batch, writes the (L2-normalized at write time) vectors, flushes a trailing partial batch. Returns a summary dict.
+Thin wrapper calling `build_dense_index(spec, "bert", BertEncoder(), …)` — builds the BERT vector store.
+
+### `def build_multilingual_index(spec: DatasetSpec, limit: Optional[int] = None, batch_size: int = 128, log_every: int = 2560) -> dict`
+Builds the **cross-lingual** vector store: calls `build_dense_index(spec, "multilingual", BertEncoder(MULTILINGUAL_MODEL_NAME), …)` so documents are encoded with the multilingual sentence model. Because queries are later encoded with the same model, a query in any supported language lands in the same space and retrieves the English documents.
 
 ### `def build_word2vec_index(spec: DatasetSpec, model: Word2VecModel, limit: Optional[int] = None, batch_size: int = 4096, log_every: int = 20000) -> dict`
 Builds the Word2Vec document vector store: computes each doc's mean-of-token-vectors embedding, `np.vstack`s each batch, streams through a `VectorStoreWriter`, flushes the trailing batch. Returns a summary dict.
@@ -576,7 +591,7 @@ The retrieve-then-rerank cascade. Stage 1 (cheap, high-recall) retrieves `candid
 ## `ir_core/engine.py`
 **Purpose:** The single retrieval entry point used by the microservices and the Streamlit UI; it lazily loads whichever indexes a dataset has, applies optional query refinement, and dispatches to the requested representation including the two hybrids.
 
-Module constants: `SINGLE_MODELS = ["tfidf", "bm25", "bert", "word2vec"]`, `HYBRID_MODELS = ["hybrid_parallel", "hybrid_serial"]`, `ALL_MODELS` their concatenation; and `ENGINE = Engine()`, a process-wide singleton.
+Module constants: `SINGLE_MODELS = ["tfidf", "bm25", "bert", "word2vec", "multilingual"]`, `HYBRID_MODELS = ["hybrid_parallel", "hybrid_serial"]`, `ALL_MODELS` their concatenation; and `ENGINE = Engine()`, a process-wide singleton.
 
 ### class `_DatasetBundle`
 A dataclass bundling one dataset's loaded resources: `spec`, `index` (`InvertedIndex`), `retrievers` (name → retriever, only those available), `refiner` (`QueryRefiner`).
@@ -587,7 +602,7 @@ A dataclass bundling one dataset's loaded resources: `spec`, `index` (`InvertedI
 Initializes an empty `_bundles` cache so each dataset's indexes load once and are reused.
 
 #### `_bundle(self, dataset_key: str) -> _DatasetBundle`
-Lazily loads/caches a dataset's resources. Resolves the spec, opens the `InvertedIndex` (raising `FileNotFoundError` with a build hint if absent), always wires up `tfidf` and `bm25`, adds a BERT `DenseRetriever` only if its `VectorStore` exists, and Word2Vec only if both its `VectorStore` and `Word2VecModel` artifacts exist. Builds a `QueryRefiner`, caches the bundle, returns it.
+Lazily loads/caches a dataset's resources. Resolves the spec, opens the `InvertedIndex` (raising `FileNotFoundError` with a build hint if absent), always wires up `tfidf` and `bm25`, adds a BERT `DenseRetriever` only if its `VectorStore` exists, Word2Vec only if both its `VectorStore` and `Word2VecModel` artifacts exist, and the cross-lingual `multilingual` `DenseRetriever` (a `BertEncoder(MULTILINGUAL_MODEL_NAME)`) only if its `VectorStore` exists. Builds a `QueryRefiner`, caches the bundle, returns it.
 
 #### `available_models(self, dataset_key: str) -> list[str]`
 Returns usable model ids: the single models present, plus the two hybrids when at least two base retrievers are available.
@@ -655,10 +670,10 @@ Runs the model twice to quantify refinement's effect. `before` disables refineme
 **Purpose:** CLI that builds every representation/index (inverted, word2vec, bert) for a dataset (requirement #3 plus the index side of #2), streaming the preprocessed corpus so it works on full multi-GB files without loading them into RAM. Inserts the project root onto `sys.path` so `ir_core` resolves when run as a script.
 
 ### `def build(dataset_key: str, models: list[str], limit, w2v_params: Word2VecParams, bert_batch: int, w2v_train_limit=None)`
-Builds the requested indexes. Resolves the spec, normalizes a falsy `limit` to `None` (ALL), defaults `w2v_train_limit` to `limit` (so Word2Vec can train on a cheap sample yet embed the full corpus). Builds the inverted index if requested; trains and saves Word2Vec then builds its embedding index; builds the BERT index with `bert_batch`. Each step is timed and logged.
+Builds the requested indexes. Resolves the spec, normalizes a falsy `limit` to `None` (ALL), defaults `w2v_train_limit` to `limit` (so Word2Vec can train on a cheap sample yet embed the full corpus). Builds the inverted index if requested; trains and saves Word2Vec then builds its embedding index; builds the BERT index with `bert_batch`; and builds the cross-lingual **multilingual** index (`emb.build_multilingual_index`) when `"multilingual"` is in the model list. Each step is timed and logged.
 
 ### `def main()`
-Argparse entry point. Defines the flags, parses them, splits `--models`, constructs `Word2VecParams`, converts a `--w2v-train-limit` of 0 to None, and calls `build(...)`. Arguments: `--dataset` (required: `argsme | argsme_sample`); `--models` (default `"inverted,word2vec,bert"`); `--limit` (int, default 50000; 0 = ALL); `--w2v-train-limit` (int, default None); `--w2v-dim` (100), `--w2v-epochs` (3), `--w2v-min-count` (2); `--bert-batch` (256). `__main__` calls `main()`.
+Argparse entry point. Defines the flags, parses them, splits `--models`, constructs `Word2VecParams`, converts a `--w2v-train-limit` of 0 to None, and calls `build(...)`. Arguments: `--dataset` (required: `argsme | argsme_sample`); `--models` (default `"inverted,word2vec,bert"`; also accepts `multilingual`); `--limit` (int, default 50000; 0 = ALL); `--w2v-train-limit` (int, default None); `--w2v-dim` (100), `--w2v-epochs` (3), `--w2v-min-count` (2); `--bert-batch` (256). `__main__` calls `main()`.
 
 ## `scripts/evaluate.py`
 **Purpose:** CLI front-end for single-model evaluation (requirement #8) that prints MAP/Recall/P@10/nDCG@10 as JSON, optionally comparing the basic pipeline against the refined one. Inserts the project root onto `sys.path`.
@@ -696,6 +711,21 @@ owning service using the stdlib `post_json`/`get_json` clients, wraps downstream
 launches all six as separate `uvicorn` subprocesses (services first, gateway last, staggered by
 1s) and terminates them all on Ctrl-C/SIGINT.
 
+**Package layout (one folder per service).** Each service is a Python package under `services/`
+with the same three-file split, so HTTP wiring, business logic, and the ASGI app stay separated and
+the structure reads identically across services:
+
+| File | Responsibility |
+|------|----------------|
+| `service.py` | Pure business logic, framework-free — calls into `ir_core` (or, for the gateway, forwards to downstream services). Independently importable/testable. |
+| `router.py` | The HTTP layer: an `APIRouter` plus the pydantic request schemas; each handler unpacks the request and calls `service`. |
+| `app.py` | The ASGI entry point uvicorn loads: `make_app(...)` (adds `/health`) then `include_router(router)`. |
+
+The packages are `gateway/`, `preprocessing/`, `indexing/`, `retrieval/`, `evaluation/` (ranking &
+evaluation), and `query_refinement/`; `common.py` (app factory + HTTP client) and `run_all.py`
+(launcher) stay at the `services/` root. Run a single service with e.g.
+`uvicorn services.retrieval.app:app --port 8003`.
+
 ## `services/common.py`
 **Purpose:** Shared helpers for the microservices: a FastAPI app factory (with a built-in health route) and a tiny stdlib `urllib`-based HTTP client used by the gateway to call downstream services over REST, keeping services loosely coupled with no extra dependency.
 
@@ -708,8 +738,8 @@ Sends a JSON POST to `url`. JSON-encodes `payload` to UTF-8, builds a POST `Requ
 ### `def get_json(url: str, timeout: float = 60.0) -> Any`
 Sends a GET to `url` (default 60s) and returns the parsed JSON. Used for health/discovery and read-only lookups (datasets, status, models).
 
-## `services/gateway.py`
-**Purpose:** The API Gateway (port 8000) — the single public entry point implementing the Gateway/Facade pattern. It routes each call to the responsible downstream service over REST and composes multiple services when needed, so clients (including the UI) only talk to the gateway. Run with `uvicorn services.gateway:app --port 8000`. Globals: `app = make_app("api-gateway")`, `S = SERVICE_URLS`.
+## `services/gateway/`
+**Purpose:** The API Gateway (port 8000) — the single public entry point implementing the Gateway/Facade pattern. It routes each call to the responsible downstream service over REST and composes multiple services when needed, so clients (including the UI) only talk to the gateway. Run with `uvicorn services.gateway.app:app --port 8000`. Split across the package: `service.py` holds the forwarding/composition logic (`_safe`, `S = SERVICE_URLS`, the per-endpoint downstream calls), `router.py` the pydantic request models + routes, and `app.py` builds `make_app("api-gateway")` and mounts the router.
 
 ### `def _safe(fn, *a, **kw)`
 Invokes `fn(*a, **kw)` and, on any exception, re-raises it as `HTTPException(status_code=502, detail="downstream error: …")` — a clean 502 instead of an uncaught 500.
@@ -749,8 +779,8 @@ Forwards to `POST {ranking_eval}/compare`; returns before/after-refinement metri
 ### `POST /search_refined` (handler `search_refined(req: SearchRequest)`)
 The composition endpoint orchestrating two services. It first calls `POST {refinement}/refine` with a refine payload, then copies the original request, replaces its `query` with `refinement.get("refined_raw") or req.query`, and calls `POST {retrieval}/search`. Attaches the refinement result under `result["refinement"]` and returns the combined object.
 
-## `services/preprocessing_service.py`
-**Purpose:** Preprocessing Service (port 8001). Single responsibility: turn raw text into normalized tokens using the *same* pipeline applied to the corpus (requirement #4). Global: `app = make_app("preprocessing-service")`.
+## `services/preprocessing/`
+**Purpose:** Preprocessing Service (port 8001). Single responsibility: turn raw text into normalized tokens using the *same* pipeline applied to the corpus (requirement #4). Package split: `service.py` (`process_text(...)` calling `ir_core.text.preprocessing.process`), `router.py` (`ProcessRequest` + `POST /process`), `app.py` (`make_app("preprocessing-service")` + router). Run: `uvicorn services.preprocessing.app:app --port 8001`.
 
 ### `class ProcessRequest(BaseModel)`
 Fields: `text: str`; `do_stemming: bool = True`; `do_lemmatize: bool = False`; `remove_stopwords: bool = True`.
@@ -758,8 +788,8 @@ Fields: `text: str`; `do_stemming: bool = True`; `do_lemmatize: bool = False`; `
 ### `POST /process` (handler `process_text(req: ProcessRequest)`)
 Calls `ir_core.text.preprocessing.process(...)` with the request flags and returns `{"text", "tokens", "num_tokens"}`.
 
-## `services/indexing_service.py`
-**Purpose:** Indexing Service (port 8002). Owns the inverted index and vector stores: reports build status, exposes term/vocabulary lookups, and can trigger a (capped) build. Full-corpus builds are normally done offline via `scripts/build_indexes.py`. Global: `app = make_app("indexing-service")`.
+## `services/indexing/`
+**Purpose:** Indexing Service (port 8002). Owns the inverted index and vector stores: reports build status, exposes term/vocabulary lookups, and can trigger a (capped) build. Full-corpus builds are normally done offline via `scripts/build_indexes.py`. Package split: `service.py` (`datasets`/`status`/`vocab`/`build` logic over `ir_core`), `router.py` (`BuildRequest` + the routes below), `app.py` (`make_app("indexing-service")` + router). Run: `uvicorn services.indexing.app:app --port 8002`.
 
 ### `GET /datasets` (handler `datasets()`)
 Returns `{"datasets": list_datasets()}`.
@@ -776,8 +806,8 @@ Fields: `dataset_key: str`; `limit: Optional[int] = 5000`.
 ### `POST /build` (handler `build(req: BuildRequest)`)
 Resolves the spec, calls `InvertedIndex(spec).build(limit=req.limit)`, returns `{"dataset", "built": True, **meta}`.
 
-## `services/retrieval_service.py`
-**Purpose:** Retrieval Service (port 8003). Owns query matching & ranking (requirement #6): given a dataset, model and query it returns ranked documents, delegating to the shared `ENGINE`. BM25 `k1`/`b` are accepted per request, and hybrid options pass through. Global: `app = make_app("retrieval-service")`.
+## `services/retrieval/`
+**Purpose:** Retrieval Service (port 8003). Owns query matching & ranking (requirement #6): given a dataset, model and query it returns ranked documents, delegating to the shared `ENGINE`. BM25 `k1`/`b` are accepted per request, and hybrid options pass through. Package split: `service.py` (`models`/`search` over `ENGINE`), `router.py` (`SearchRequest` + routes), `app.py` (`make_app("retrieval-service")` + router). Run: `uvicorn services.retrieval.app:app --port 8003`.
 
 ### `class SearchRequest(BaseModel)`
 Same shape as the gateway's `SearchRequest` (`dataset`, `model="bm25"`, `query`, `top_k=10`, `bm25_k1`, `bm25_b`, `refine_opts`, `history`, `hybrid_opts`).
@@ -788,8 +818,8 @@ Returns `{"dataset": dataset_key, "models": ENGINE.available_models(dataset_key)
 ### `POST /search` (handler `search(req: SearchRequest)`)
 Delegates to `ENGINE.search(...)` with all request fields and returns the ranked list.
 
-## `services/ranking_eval_service.py`
-**Purpose:** Ranking & Evaluation Service (port 8004). Owns offline effectiveness measurement (requirement #8): MAP, Recall, P@10, nDCG@10 over a dataset's qrels, plus a before/after-refinement comparison. Global: `app = make_app("ranking-eval-service")`.
+## `services/evaluation/`
+**Purpose:** Ranking & Evaluation Service (port 8004). Owns offline effectiveness measurement (requirement #8): MAP, Recall, P@10, nDCG@10 over a dataset's qrels, plus a before/after-refinement comparison. Package split: `service.py` (`evaluate`/`compare` over `ir_core.eval.evaluate`), `router.py` (`EvalRequest` + routes), `app.py` (`make_app("ranking-eval-service")` + router). Run: `uvicorn services.evaluation.app:app --port 8004`.
 
 ### `class EvalRequest(BaseModel)`
 Fields: `dataset`; `model="bm25"`; `num_queries: Optional[int] = 50`; `eval_depth: int = 100`; `bm25_k1`; `bm25_b`; `refine_opts`; `hybrid_opts`.
@@ -800,8 +830,8 @@ Calls `evaluate_model(...)` with the request fields and returns the metric dict.
 ### `POST /compare` (handler `compare(req: EvalRequest)`)
 Calls `compare_refinement(...)` to evaluate the model with refinement OFF then ON (note: `refine_opts` is not forwarded here) and returns the comparison.
 
-## `services/query_refinement_service.py`
-**Purpose:** Query Refinement Service (port 8005). Owns requirement #5: spelling correction, WordNet synonym expansion, query suggestion, and history-based personalization, delegating to `ENGINE`. Global: `app = make_app("query-refinement-service")`.
+## `services/query_refinement/`
+**Purpose:** Query Refinement Service (port 8005). Owns requirement #5: spelling correction, WordNet synonym expansion, query suggestion, and history-based personalization, delegating to `ENGINE`. Package split: `service.py` (`refine`/`suggest` over `ENGINE`), `router.py` (`RefineRequest`/`SuggestRequest` + routes), `app.py` (`make_app("query-refinement-service")` + router). Run: `uvicorn services.query_refinement.app:app --port 8005`.
 
 ### `class RefineRequest(BaseModel)`
 Fields: `dataset`; `query`; `spell=True`; `expand=True`; `history_personalize=True`; `history: Optional[list[str]] = None`.
@@ -816,7 +846,7 @@ Calls `ENGINE.refine(...)` and returns `r.to_dict()` (including `refined_raw`).
 Returns `{"query": req.query, "suggestions": ENGINE.suggest(...)}`.
 
 ## `services/run_all.py`
-**Purpose:** Dev launcher that starts every microservice plus the gateway, each as its own uvicorn subprocess, so the whole SOA backend comes up with `python -m services.run_all` (Ctrl-C to stop). `SERVICES` is an ordered list of `(target, port)` tuples (services on 8001-8005, gateway last on 8000).
+**Purpose:** Dev launcher that starts every microservice plus the gateway, each as its own uvicorn subprocess, so the whole SOA backend comes up with `python -m services.run_all` (Ctrl-C to stop). `SERVICES` is an ordered list of `(target, port)` tuples pointing at each package's ASGI app (`services.preprocessing.app:app` 8001, `services.indexing.app:app` 8002, `services.retrieval.app:app` 8003, `services.evaluation.app:app` 8004, `services.query_refinement.app:app` 8005, and `services.gateway.app:app` last on 8000).
 
 ### `def main()`
 Iterates `SERVICES`, launching each via `subprocess.Popen([sys.executable, "-m", "uvicorn", target, "--host", "127.0.0.1", "--port", str(port), "--log-level", "warning"])`, collecting handles, printing each URL, sleeping 1.0s between launches (staggered startup). Prints the gateway URL, defines a nested `shutdown(*_)` that terminates all children and exits, registers it on `SIGINT`, and `wait()`s on each process (with a `KeyboardInterrupt` fallback).
@@ -885,7 +915,7 @@ Delegates every other attribute access to the real `tempfile` module, so the shi
 ### Module-level configuration
 - **`sys.path` insertion:** prepends the project root so `ir_core`/`services` import when Streamlit runs the file directly.
 - **`st.set_page_config(...)`:** title `"IR System"`, icon `🔎`, `layout="wide"`, called once at import.
-- **`MODEL_LABELS` (dict):** internal model keys → human-readable selectbox labels. Used as the model picker's `format_func`, in the header caption, spinners, and Help tab.
+- **`MODEL_LABELS` (dict):** internal model keys → human-readable selectbox labels (including the cross-lingual `multilingual` option, labelled "Embedding · Multilingual 🌐 (cross-lingual)"). Used as the model picker's `format_func`, in the header caption, spinners, and Help tab.
 - **`MODEL_HELP` (dict):** model keys → one-line descriptions, shown under the model selectbox and in Help.
 - **`EXAMPLES` (dict):** curated clickable example queries per dataset key. Rendered as buttons in Search and listed in Help.
 - **`CSS` (str):** an inline `<style>` block styling the result cards (`.result-card`, `.rank-badge`, `.docid`, `.score-val`, `.score-bar`, `.comp-badge`, `.snippet`, `mark`, `.pill`), injected once.
